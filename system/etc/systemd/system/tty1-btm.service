@@ -1,0 +1,21 @@
+
+[Service]
+Type=simple
+Nice=19
+ExecStartPre=/usr/bin/setvtrgb /etc/myvtcolors.txt
+ExecStart=/usr/bin/btm --battery --network_use_bytes --enable_cache_memory --hide-k-threads --show_table_scroll_position --tree -r 2s -m
+User=remenod
+
+PAMName=login
+TTYPath=/dev/tty1
+TTYReset=no
+TTYVHangup=no
+StandardInput=tty
+StandardOutput=tty
+
+UtmpIdentifier=tty1
+UtmpMode=user
+
+Restart=always
+KillMode=control-group
+

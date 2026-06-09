@@ -1,0 +1,58 @@
+@import "theme.css";
+
+* {
+	/* ignore GTK theme */
+	all: initial;
+	color: @main-fg;
+}
+
+@import "styles/fonts.css";
+@import "styles/modules-center.css";
+@import "styles/modules-left.css";
+@import "styles/modules-right.css";
+@import "styles/states.css";
+@import "styles/tray.css";
+
+.module {
+	margin-bottom: -1px;
+}
+
+#waybar {
+	background-color: @outline;
+}
+#waybar > box {
+	margin: 4px;
+	background-color: @main-bg;
+}
+
+button {
+	border-radius: 16px;
+	min-width: 10px;
+	padding: 0 2px;
+}
+button:hover {
+	background-color: @hover-bg;
+	color: @hover-fg;
+}
+
+tooltip {
+    border: 2px solid @accent; /* Змінив рамку на акцентний колір (lavender) для краси */
+    border-radius: 10px;
+    background-color: alpha(@main-bg, 0.95); /* Ваш фон з 95% непрозорістю */
+}
+
+tooltip > box {
+    padding: 0 6px;
+}
+
+tooltip label {
+    color: @main-fg; /* Ваш основний колір тексту */
+    padding: 6px;
+    /* Шрифт підтягнеться автоматично з вашого селектора * { font-family: ... } */
+}
+
+/* custom module power-menu */
+.powerprofile {
+	background: @surface0;
+	color: @text;
+}

@@ -1,0 +1,20 @@
+[user]
+	email = remenod@gmail.com
+	name = Remenod
+[init]
+	defaultBranch = master
+[core]
+	sshCommand = "ssh -i ~/.ssh/github"
+	editor = nano
+[credential]
+	username = remenod
+	helper = store
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[color]
+	ui = auto
+	status = always

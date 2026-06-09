@@ -1,0 +1,9 @@
+{
+    "custom/powerprofile": {
+        "exec": "~/.config/waybar/scripts/powerprofile-get.sh",
+        "interval": 15,
+        "format": " {text} ",
+        "tooltip": true,
+        "on-click": "alacritty --class alacritty-popup-menu -e ~/.config/waybar/scripts/powerprofile-set.sh"
+    }
+}

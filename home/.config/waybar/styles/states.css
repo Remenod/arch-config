@@ -1,0 +1,65 @@
+#custom-trigger:hover,
+#idle_inhibitor:hover,
+#clock.date:hover,
+#network:hover,
+#bluetooth:hover,
+#custom-system_update:hover,
+#mpris:hover,
+#pulseaudio:hover,
+#wireplumber:hover {
+	color: @hover-fg;
+}
+
+/* inactive state */
+#idle_inhibitor.deactivated,
+#mpris.paused,
+#pulseaudio.output.muted,
+#pulseaudio.input.source-muted,
+#wireplumber.muted {
+	color: @hover-fg;
+}
+
+#memory.warning,
+#cpu.warning,
+#battery.warning {
+	color: @warning;
+}
+
+#temperature.critical,
+#memory.critical,
+#cpu.critical,
+#battery.critical {
+	color: @critical;
+}
+
+#battery.charging {
+	color: @charging;
+}
+
+/* --- КОНТЕКСТНЕ МЕНЮ (ПРАВИЙ КЛІК) --- */
+menu {
+    background-color: @main-bg;
+    border: 2px solid @main-br; /* Така ж рамка, як у ваших підказок */
+    border-radius: 10px;
+    padding: 6px;
+}
+
+/* Окремі пункти меню */
+menuitem {
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: @main-fg;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Наведення на пункт меню */
+menuitem:hover {
+    background-color: @hover-bg; /* Колір @base з вашої теми */
+    color: @accent; /* Текст стає лавандовим при наведенні */
+}
+
+/* Роздільники в меню */
+menu separator {
+    margin: 4px 0;
+    border-bottom: 1px solid @main-br;
+}
