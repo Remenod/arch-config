@@ -112,7 +112,7 @@ set whitespace "·→"
 # set softwrap
 
 ## Automatically break long lines
-set breaklonglines
+# set breaklonglines
 
 ## Wrap lines only at whitespace
 set atblanks

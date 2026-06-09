@@ -1,7 +1,13 @@
 {
     "files.associations": {
-        "*.mpl": "maple",
+        // Якщо ваші файли мають якесь інше розширення (наприклад, .conf або .txt)
+        //"*.mycustomext": "antlr",
+        // Якщо це файли без розширення, але з конкретним іменем
+        //"my_specific_file": "antlr",
+        // Якщо всі файли у певній директорії мають розпізнаватися як ця мова
         "**/macros/**/**": "rrf-gcode",
+        // Якщо імена файлів починаються з певного префікса
+        //"parser_*": "antlr"
     },
     "window.titleBarStyle": "native",
     "editor.fontFamily": "JetBrains Mono, monospace",
@@ -31,6 +37,9 @@
         "diffEditor.ignoreTrimWhitespace": false
     },
     "makefile.configureOnOpen": true,
+    "files.associations": {
+        "*.mpl": "maple",
+    },
     "[maple]": {},
     "[rust]": {
         "editor.inlayHints.enabled": "off"

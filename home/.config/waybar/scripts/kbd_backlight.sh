@@ -102,8 +102,13 @@ case "${1:-status}" in
         esac
         ;;
 
+    restore)
+	    color="$(read_color)"
+        set_color "$color"
+	    ;;
+
     *)
-        echo "Usage: $0 [status|off|low [HEX_GRAY]|high|toggle]" >&2
+        echo "Usage: $0 [status|off|low [HEX_GRAY]|high|toggle|restore]" >&2
         exit 1
         ;;
 esac
