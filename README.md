@@ -44,10 +44,11 @@ git switch -c dell-precision-5510
 git status --short --ignored
 ```
 
-`snapshot-home.sh` moves only the allowlisted paths from `$HOME` into `home/`
-and replaces them with relative symlinks. `snapshot-system.sh` only snapshots
-selected `/etc` files, package lists, and enabled systemd units; it does not
-collect anything from `$HOME`.
+`snapshot-home.sh` moves only the allowlisted paths from `$HOME` into `home/`,
+replaces them with relative symlinks, and adds `.gitkeep` files to empty
+directories so Git preserves them. `snapshot-system.sh` only snapshots selected
+`/etc` files, package lists, and enabled systemd units; it does not collect
+anything from `$HOME`.
 
 ## Restore A Host
 

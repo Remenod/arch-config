@@ -34,6 +34,15 @@ paths=(
 adopted=0
 skipped=0
 
+add_gitkeep_to_empty_dirs() {
+  local dir
+
+  while IFS= read -r -d '' dir; do
+    touch "$dir/.gitkeep"
+    printf 'kept empty directory: %s\n' "$dir"
+  done < <(find "$repo/home" -type d -empty -print0)
+}
+
 adopt_one() {
   local rel="$1"
   local src="$home/$rel"
@@ -76,6 +85,8 @@ mkdir -p "$repo/home"
 for rel in "${paths[@]}"; do
   adopt_one "$rel"
 done
+
+add_gitkeep_to_empty_dirs
 
 printf '\nadopted: %s, skipped: %s\n' "$adopted" "$skipped"
 printf 'review with: git status --short --ignored\n'
