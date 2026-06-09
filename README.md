@@ -2,13 +2,13 @@
 
 Arch Linux dotfiles and system configuration snapshots, split by machine.
 
-`master` is intentionally just the repository index. Real configs live on
-host-specific branches, because display layouts, firmware tools, device rules,
-and `/etc` snapshots are not portable enough to mix safely.
+`master` is intentionally just the repository index/bootstrap area. Real
+configs live on host-specific branches, because display layouts, firmware
+tools, device rules, and `/etc` snapshots are not portable enough to mix safely.
 
 ## Branches
 
-- `master` - README only; use it as the map for the repo.
+- `master` - repo map and bootstrap scripts; no machine config.
 - `msi-delta-15` - current MSI Delta 15 A5EFK config.
 - `dell-precision-5510` - old Dell Precision 5510 config/archive branch.
 
@@ -25,9 +25,29 @@ script or config change is actually portable.
 - `system/*.txt` - enabled systemd unit snapshots.
 - `audit/` - notes about hardcoded paths, hardware-specific settings, skipped
   secrets, and other portability risks.
+- `scripts/snapshot-home.sh` - first-time adoption of selected `$HOME` paths
+  into `home/`, replacing the live files with symlinks back to the repo.
 - `scripts/link-home.sh` - recreates user-level symlinks.
 - `scripts/snapshot-system.sh` - refreshes package lists and selected system
   snapshots.
+
+## Bootstrap A New Host Branch
+
+Start from `master`, create the machine branch, then adopt the current machine's
+home config and system snapshots:
+
+```sh
+git switch master
+git switch -c dell-precision-5510
+./scripts/snapshot-home.sh
+./scripts/snapshot-system.sh
+git status --short --ignored
+```
+
+`snapshot-home.sh` moves only the allowlisted paths from `$HOME` into `home/`
+and replaces them with relative symlinks. `snapshot-system.sh` only snapshots
+selected `/etc` files, package lists, and enabled systemd units; it does not
+collect anything from `$HOME`.
 
 ## Restore A Host
 
