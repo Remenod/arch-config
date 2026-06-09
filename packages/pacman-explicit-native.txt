@@ -33,8 +33,6 @@ hyprpicker
 hyprshot
 inetutils
 kdeconnect
-krdc
-krdp
 less
 libappindicator
 libinput-tools
@@ -45,6 +43,7 @@ linux-firmware
 linux-headers
 linux-zen
 mako
+man-db
 mpv
 nano
 ncdu
@@ -84,7 +83,6 @@ wireplumber
 woff2-font-awesome
 wtype
 xdg-desktop-portal-hyprland
-xdg-desktop-portal-kde
 xdg-desktop-portal-wlr
 zerotier-one
 zram-generator
