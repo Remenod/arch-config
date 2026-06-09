@@ -1,0 +1,33 @@
+{
+	"custom/kbd_backlight": {
+		"exec":"~/.config/waybar/scripts/kbd_backlight.sh",
+		// "exec-if":
+		// "exec-on-event":
+		// "hide-empty-text":
+		// "return-type":
+		"interval": 15,
+		// "restart-interval":
+		// "signal":
+		"format": " {text}",
+		// "format-icons":
+		// "rotate":
+		// "min-length":
+		// "max-length":
+		// "align":
+		// "justify":
+		"on-click": "alacritty --class alacritty-popup-menu -e ~/.config/waybar/scripts/kbd-backlight-menu.sh",
+		// "on-click-middle":
+		"on-click-right": "openrgb & disown ; exit",
+		// "on-update":
+		// "on-scroll-up":
+		// "on-scroll-down":
+		// "smooth-scrolling-threshold":
+		"tooltip": true
+		// "tooltip-format":
+		// "escape":
+		// "menu":
+		// "menu-file":
+		// "menu-actions":
+		// "expand":
+	}
+}

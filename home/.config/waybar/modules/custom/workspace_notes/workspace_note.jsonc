@@ -1,0 +1,10 @@
+{
+  "custom/workspace_note": {
+	"exec": "/home/remenod/.config/waybar/scripts/workspace_notes/workspace_note.sh",
+	"return-type": "json",
+	"format": "{}",
+	"restart-interval": 1,
+	"on-click": "alacritty --class alacritty-popup-menu -e /home/remenod/.config/waybar/scripts/workspace_notes/workspace_note_edit.sh",
+	"on-click-right": "alacritty --class alacritty-popup-menu -e /home/remenod/.config/waybar/scripts/workspace_notes/workspace_note_preset.sh"
+  }
+}

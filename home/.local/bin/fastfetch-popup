@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec alacritty \
+    --class alacritty-fastfetch,alacritty-fastfetch \
+    -o 'window.opacity=1.0' \
+    -o 'font.size=9.0' \
+    -o 'window.dimensions.columns=82' \
+    -o 'window.dimensions.lines=24' \
+    -e zsh -lc 'printf "\n\033[?25l"; fastfetch; printf "\n"; read -r'

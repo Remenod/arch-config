@@ -1,0 +1,26 @@
+/* Основний контейнер трею */
+#tray {
+    background-color: @tray;
+    border-radius: 0px;
+    padding: 0 6px;
+    /* Відступи підлаштовано під ваш загальний стиль модулів */
+}
+
+/* Ефект наведення на іконки */
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+/* Анімація для іконок, що потребують уваги (наприклад, нове повідомлення) */
+#tray > .needs-attention {
+    animation-name: blink;
+    animation-duration: 1.5s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+@keyframes blink {
+    0% { background-color: transparent; }
+    50% { background-color: @critical; } /* Використовує ваш червоний колір з теми */
+    100% { background-color: transparent; }
+}

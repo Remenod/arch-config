@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/hyprshot.lock"
+
+(
+    flock -n 9 || exit 0
+    hyprshot "$@"
+) 9>"$LOCK_FILE"

@@ -1,0 +1,16 @@
+advcpmv
+android-sdk-platform-tools
+android-studio
+ayugram-desktop-bin
+claude-desktop-bin
+dotnet-runtime-6.0-bin
+eclipse-cpp-bin
+gputest
+isw
+msi-ec-dkms-git
+nbfc-linux
+path-utils
+ttf-ms-fonts
+visual-studio-code-bin
+wayvnc-git
+yay

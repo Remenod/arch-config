@@ -1,0 +1,12 @@
+{
+    "custom/fan": {
+	"exec": "~/.config/waybar/scripts/fan.sh",
+	"return-type": "json",
+	"interval": 1,
+        "format": "{text}",
+        "min-length": 8,
+        "max-length": 8,
+	"on-click": "alacritty --class alacritty-popup-menu -e ~/.config/waybar/scripts/fan-menu.sh",
+	"tooltip": true
+    }
+}

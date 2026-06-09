@@ -1,0 +1,31 @@
+# Local histories and generated editor state
+home/.bash_history
+home/.zsh_history
+home/.nano/filepos_history
+home/.zcompdump*
+
+# Runtime state and backups that live beside configs
+*.save
+*.log
+home/.config/waybar/.fan_control_status
+home/.local/share/applications/mimeinfo.cache
+
+# Secrets and machine identity files intentionally not adopted
+home/.ssh/
+home/.gnupg/
+home/.config/gh/hosts.yml
+home/.codex/auth.json
+home/.config/kdeconnect/privateKey.pem
+home/.config/kdeconnect/certificate.pem
+
+# Heavy app state/caches that should stay outside dotfiles
+home/.config/Code/User/History/
+home/.config/Code/User/globalStorage/
+home/.config/Code/User/workspaceStorage/
+home/.config/Code - OSS/
+home/.config/chromium/
+home/.config/discord/
+home/.config/mozilla/
+home/.config/Claude/
+home/.cache/
+

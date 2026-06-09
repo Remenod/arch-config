@@ -1,0 +1,179 @@
+#############################################################################################################################################
+## BASIC EDITOR BEHAVIOR
+###############################################################################
+
+## Enable automatic indentation
+set autoindent
+
+## Treat backspace and delete keys in a more intuitive way
+# set rebinddelete
+
+## Make Ctrl+C copy instead of cancel
+# set cutfromcursor
+
+## Save files by default in Unix format (LF)
+# set unix
+
+## Do not convert CRLF and CR line endings
+# set noconvert
+
+## Enable unlimited undo/redo (if supported
+# set undo
+
+## Allow suspending nano with Ctrl+Z
+# set suspendable
+
+## Enable mouse support
+# set mouse
+
+## Enable smooth scrolling
+# set smooth
+
+## Scroll by half-screen instead of line-by-line
+# set jumpyscrolling
+
+###############################################################################
+## FILE HANDLING
+###############################################################################
+
+## Create backup files
+# set backup
+
+## Directory where backup files are stored
+# set backupdir "~/.cache/nano"
+
+## Use file locking to prevent simultaneous editing
+# set locking
+
+## Write changes to a temporary file first (safer)
+# set tempfile
+
+## Do not follow symbolic links
+# set nofollow
+
+## Allow backups in insecure directories
+# set allow_insecure_backup
+
+###############################################################################
+## SEARCH AND REPLACE
+###############################################################################
+
+## Make searches case sensitive
+# set casesensitive
+
+## Enable regular expressions by default
+# set regexp
+
+## Enable regex shortcuts like \d \w etc.
+# set magic
+
+## Match only whole words
+# set wordbounds
+
+## Show cursor position during search
+# set showcursor
+
+## Save search and replace history
+# set historylog
+
+###############################################################################
+## DISPLAY AND INTERFACE
+###############################################################################
+
+## Show line numbers
+set linenumbers
+
+## Show constant cursor position (line/column)
+set constantshow
+
+## Show a scrollbar on the right
+set indicator
+
+## Use a minimal status bar
+# set minibar
+
+## Disable the help bar at the bottom
+set nohelp
+
+## Count lines starting from zero instead of one
+# set zero
+
+## Show whitespace characters
+set whitespace "·→"
+
+###############################################################################
+## LINE WRAPPING AND FORMATTING
+###############################################################################
+
+## Disable automatic line wrapping
+# set nowrap
+
+## Enable visual soft wrapping (does not modify file)
+# set softwrap
+
+## Automatically break long lines
+set breaklonglines
+
+## Wrap lines only at whitespace
+set atblanks
+
+## Set the preferred line width
+# set fill 60
+
+###############################################################################
+## TABS AND INDENTATION
+###############################################################################
+
+## Set tab width
+set tabsize 4
+
+## Convert tabs to spaces
+# set tabstospaces
+
+## Trim trailing whitespace when saving
+set trimblanks
+
+###############################################################################
+## MULTI-FILE AND SESSION BEHAVIOR
+###############################################################################
+
+## Enable multiple open buffers
+# set multibuffer
+
+## Remember cursor position in files
+set positionlog
+
+###############################################################################
+## RESTRICTED / SAFE MODES
+###############################################################################
+
+## Restricted mode (no shell commands, limited file access)
+# set restricted
+
+###############################################################################
+## TERMINAL AND INPUT
+###############################################################################
+
+## Interpret escape sequences literally (useful for serial/TTY)
+# set rawsequences
+
+## Allow ^Q to quit without prompt
+# set quickblank
+
+###############################################################################
+## MISCELLANEOUS
+###############################################################################
+
+## Allow filenames to begin with a dash
+# set allowprepend
+
+## Enable smart home key behavior
+# set smarthome
+
+## Preserve cursor position when paging
+# set preserve
+
+## Use bold instead of reverse video
+# set boldtext
+
+include "~/.nano/*.nanorc"

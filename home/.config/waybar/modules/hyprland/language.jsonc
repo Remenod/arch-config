@@ -1,0 +1,9 @@
+{
+	"hyprland/language": {
+		"format": "  {} ",
+		"format-en": "EN",
+		"format-uk": "UA",
+		"keyboard-name": "at-translated-set-2-keyboard",
+		"on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next"
+	}
+}
