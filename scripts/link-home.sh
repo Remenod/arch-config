@@ -4,6 +4,12 @@ set -euo pipefail
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 home="${HOME:?}"
 
+if [[ ! -d "$repo/home" ]]; then
+  printf 'no home snapshot found: %s\n' "$repo/home" >&2
+  printf 'on a new host branch, run ./scripts/snapshot-home.sh first.\n' >&2
+  exit 1
+fi
+
 paths=(
   ".gitconfig"
   ".nanorc"
