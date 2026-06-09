@@ -1,29 +1,65 @@
 # Arch Config
 
-Dotfiles and local Arch Linux system snapshots for this machine.
+Arch Linux dotfiles and system configuration snapshots, split by machine.
 
-## Layout
+`master` is intentionally just the repository index. Real configs live on
+host-specific branches, because display layouts, firmware tools, device rules,
+and `/etc` snapshots are not portable enough to mix safely.
 
-- `home/` contains files adopted from `$HOME`; live files in `$HOME` are relative symlinks back here.
-- `system/etc/` contains snapshots of selected `/etc` files. These are not symlinked automatically because they require root-owned restore decisions.
-- `packages/` contains explicit pacman/AUR package lists.
-- `system/*.txt` contains enabled systemd unit snapshots.
-- `audit/` contains notes about hardcoded user, host, hardware, and skipped sensitive state.
+## Branches
 
-## Restore User Configs
+- `master` - README only; use it as the map for the repo.
+- `msi-delta-15` - current MSI Delta 15 A5EFK config.
+- `dell-precision-5510` - old Dell Precision 5510 config/archive branch.
 
-From this repo:
+Avoid merging host branches wholesale. Cherry-pick shared improvements when a
+script or config change is actually portable.
+
+## Host Branch Layout
+
+- `home/` - files adopted from `$HOME`; live files in `$HOME` are symlinks back
+  into this directory.
+- `system/etc/` - selected `/etc` snapshots. These are never restored
+  automatically because they need root-level review.
+- `packages/` - explicit native/AUR package lists for rebuilding the machine.
+- `system/*.txt` - enabled systemd unit snapshots.
+- `audit/` - notes about hardcoded paths, hardware-specific settings, skipped
+  secrets, and other portability risks.
+- `scripts/link-home.sh` - recreates user-level symlinks.
+- `scripts/snapshot-system.sh` - refreshes package lists and selected system
+  snapshots.
+
+## Restore A Host
+
+Checkout the machine branch first:
 
 ```sh
+git switch msi-delta-15
 ./scripts/link-home.sh
 ```
 
-Existing non-symlink files are moved aside with a timestamped `.backup.*` suffix.
+The link script moves existing non-symlink files aside with a timestamped
+`.backup.*` suffix before creating symlinks.
 
-## Refresh Snapshots
+System files under `system/etc/` are reference snapshots. Review diffs and copy
+them manually with `sudo` only when they make sense for the target machine.
+
+## Refresh A Host Branch
 
 ```sh
 ./scripts/snapshot-system.sh
+git status
 ```
 
-System files under `system/etc/` are snapshots. Restore them manually with `sudo` after reviewing diffs.
+Review the diff before committing. Runtime state, histories, caches, app
+databases, and secrets should stay out of the repo.
+
+## Never Commit
+
+- SSH private keys, GPG private keys, GitHub CLI auth files, Codex auth state.
+- Browser, Electron, VS Code workspace/globalStorage/history, Discord, Claude,
+  dconf, Pulse/WirePlumber state, Gradle caches, Go telemetry.
+- Shell/editor histories and generated status files.
+
+The `.gitignore` on host branches is intentionally conservative. If something
+looks like state rather than config, leave it out.
