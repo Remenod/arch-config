@@ -2,7 +2,7 @@
     "custom/fan": {
 	"exec": "~/.config/waybar/scripts/fan.sh",
 	"return-type": "json",
-	"interval": 1,
+	"interval": 2,
         "format": "{text}",
         "min-length": 8,
         "max-length": 8,

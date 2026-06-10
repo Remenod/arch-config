@@ -8,7 +8,6 @@ eclipse-cpp-bin
 gputest
 isw
 msi-ec-dkms-git
-nbfc-linux
 path-utils
 ttf-ms-fonts
 visual-studio-code-bin

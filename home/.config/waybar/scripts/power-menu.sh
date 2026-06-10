@@ -32,12 +32,12 @@ main() {
 	selected=$(printf "%s\n" "${list[@]}" | fzf "${options[@]}")
 
 	case $selected in
-	    ""* )      loginctl lock-session ;;
+	    ""* )      systemctl suspend ;;
 	    ""* )      systemctl poweroff ;;
+	    "󰒲"* )      systemctl hibernate ;;
 	    ""* )      systemctl reboot ;;
 	    "󰍃"* )      loginctl terminate-session "$XDG_SESSION_ID" ;;
-	    "󰒲"* )      systemctl hibernate ;;
-	    ""* )      systemctl suspend ;;
+	    ""* )      loginctl lock-session ;;
 	    * )          exit 1 ;;
 	esac
 }

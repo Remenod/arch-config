@@ -1,8 +1,11 @@
 {
     "custom/powerprofile": {
         "exec": "~/.config/waybar/scripts/powerprofile-get.sh",
+        "return-type": "json",
         "interval": 15,
-        "format": " {text} ",
+        "format": "{text}",
+        "min-length": 3,
+        "max-length": 3,
         "tooltip": true,
         "on-click": "alacritty --class alacritty-popup-menu -e ~/.config/waybar/scripts/powerprofile-set.sh"
     }

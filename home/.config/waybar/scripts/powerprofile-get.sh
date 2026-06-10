@@ -1,21 +1,8 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-profile=$(powerprofilesctl get)
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=msi-ec.sh
+source "$script_dir/msi-ec.sh"
 
-case "$profile" in
-    power-saver)
-        emoji=""
-        ;;
-    performance)
-        emoji=""
-        ;;
-    balanced)
-        emoji=""
-        ;;
-    *)
-        emoji=""
-        ;;
-esac
-
-echo "$emoji"
-echo "Profile: $profile"
+msi_ec_profile_json

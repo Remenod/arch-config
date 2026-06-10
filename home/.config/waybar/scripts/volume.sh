@@ -13,12 +13,14 @@
 DEF_VALUE=1
 MIN=0
 MAX=100
+MUTE_LED_BASE="${MUTE_LED_BASE:-/sys/devices/platform/msi-ec/leds}"
 
 usage() {
 	local script=${0##*/}
 
 	cat <<- EOF
 		USAGE: $script {input|output} {mute|raise|lower} [value]
+		       $script sync-leds
 
 		Adjust default device volume and send a notification with the current level
 
@@ -85,6 +87,42 @@ get_icon() {
 	printf "%s" "$icon"
 }
 
+get_led_file() {
+	case $DEVICE in
+		input)
+			printf "%s/platform::micmute/brightness" "$MUTE_LED_BASE"
+			;;
+		output)
+			printf "%s/platform::mute/brightness" "$MUTE_LED_BASE"
+			;;
+	esac
+}
+
+write_led() {
+	local file="$1"
+	local value="$2"
+
+	[[ -e $file ]] || return 0
+
+	if [[ -w $file ]]; then
+		printf "%s\n" "$value" > "$file"
+	elif sudo -n true >/dev/null 2>&1; then
+		printf "%s\n" "$value" | sudo -n tee "$file" >/dev/null
+	fi
+}
+
+sync_led() {
+	local state value
+
+	state=$(get_state)
+	case $state in
+		Muted)   value=1 ;;
+		*)       value=0 ;;
+	esac
+
+	write_led "$(get_led_file)" "$value"
+}
+
 set_state() {
 	pactl "set-$DEV_STATE" toggle
 
@@ -92,6 +130,7 @@ set_state() {
 
 	state=$(get_state)
 	icon=$(get_icon)
+	sync_led
 
 	notify-send "$DEV_NAME: $state" -i "$icon" \
 		-h string:x-canonical-private-synchronous:volume
@@ -122,21 +161,13 @@ set_volume() {
 
 	local icon
 	icon=$(get_icon $new_level)
+	sync_led
 
 	notify-send "$DEV_NAME: $new_level%" -h int:value:$new_level -i "$icon" \
 		-h string:x-canonical-private-synchronous:volume
 }
 
-main() {
-	DEVICE=$1
-	ACTION=$2
-	VALUE=${3:-$DEF_VALUE}
-
-	if ((VALUE < 1)); then
-		usage >&2
-		return 1
-	fi
-
+select_device() {
 	case $DEVICE in
 		input)
 			DEV_DEF="@DEFAULT_SOURCE@"
@@ -157,6 +188,39 @@ main() {
 			return 1
 			;;
 	esac
+}
+
+sync_leds() {
+	DEVICE=output
+	select_device
+	sync_led
+
+	DEVICE=input
+	select_device
+	sync_led
+}
+
+main() {
+	if [[ ${1:-} == sync-leds ]]; then
+		sync_leds
+		return 0
+	fi
+
+	if (($# < 2)); then
+		usage >&2
+		return 1
+	fi
+
+	DEVICE=$1
+	ACTION=$2
+	VALUE=${3:-$DEF_VALUE}
+
+	if ((VALUE < 1)); then
+		usage >&2
+		return 1
+	fi
+
+	select_device
 
 	case $ACTION in
 		mute)

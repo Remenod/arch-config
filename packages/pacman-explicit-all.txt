@@ -56,7 +56,6 @@ man-db
 mpv
 msi-ec-dkms-git
 nano
-nbfc-linux
 ncdu
 networkmanager
 nmap
