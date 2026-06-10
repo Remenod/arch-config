@@ -29,6 +29,7 @@
 		"~/.config/waybar/modules/clock.jsonc",
 		"~/.config/waybar/modules/network.jsonc",
 		"~/.config/waybar/modules/bluetooth.jsonc",
+		"~/.config/waybar/modules/custom/camera.jsonc",
 		"~/.config/waybar/modules/custom/system_update.jsonc",
 		"~/.config/waybar/modules/custom/placeholder.jsonc",
 
@@ -117,6 +118,7 @@
 		"custom/right_div#4",
 		"network",
 		"bluetooth",
+		"custom/camera",
 		"custom/system_update",
 		"custom/right_div#5",
 		"custom/placeholder"

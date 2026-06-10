@@ -1,0 +1,13 @@
+{
+	"custom/camera": {
+		"exec": "~/.config/waybar/scripts/camera.sh module",
+		"return-type": "json",
+		"interval": 5,
+		"signal": 2,
+		"format": "{}",
+		"min-length": 2,
+		"max-length": 2,
+		"on-click": "~/.config/waybar/scripts/camera.sh toggle && pkill -RTMIN+2 waybar",
+		"on-click-right": "~/.config/waybar/scripts/camera.sh block-toggle && pkill -RTMIN+2 waybar"
+	}
+}

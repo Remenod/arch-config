@@ -3,6 +3,7 @@
 #clock.date:hover,
 #network:hover,
 #bluetooth:hover,
+#custom-camera:hover,
 #custom-system_update:hover,
 #mpris:hover,
 #pulseaudio:hover,
@@ -12,6 +13,8 @@
 
 /* inactive state */
 #idle_inhibitor.deactivated,
+#custom-camera.off,
+#custom-camera.missing,
 #mpris.paused,
 #pulseaudio.output.muted,
 #pulseaudio.input.source-muted,

@@ -19,6 +19,7 @@ Most of these can probably become `$HOME`, `~`, or repo-relative helper paths.
 - `home/.config/hypr/conf.d/10-monitors.conf` hardcodes monitor outputs, refresh rates, positions, transforms, and EDID descriptors.
 - `home/.config/waybar/scripts/msi-ec.sh` uses MSI EC sysfs attributes under `/sys/devices/platform/msi-ec`; this is intentionally MSI-specific. Fan RPM reading still uses `isw -r E15CKAMS`, while mode writes use `msi-ec`. Power profiles still use `powerprofilesctl`.
 - `home/.config/waybar/scripts/volume.sh` controls MSI mute LEDs through `/sys/devices/platform/msi-ec/leds/platform::mute` and `platform::micmute`.
+- `home/.config/waybar/scripts/camera.sh` toggles the MSI EC webcam controls at `/sys/devices/platform/msi-ec/webcam` and `webcam_block`.
 - Avoid restoring the old manually installed DKMS `msi_ec/0.08` module. Its Delta 15 config used `mute_led_address = 0x2d`, while the tracked `msi-ec-dkms-git` package maps `15CKEMS1.108` to `mute_led_address = 0x2c`; the old module made the sound mute LED sysfs node accept writes without lighting the physical LED.
 - `home/.config/waybar/scripts/kbd_backlight.sh` uses OpenRGB device index defaults, so it depends on detected device order.
 - `home/.config/OpenRGB/OpenRGB.json` is intentionally tracked without logs, but it is hardware/device specific.

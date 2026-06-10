@@ -11,8 +11,8 @@
 		"format": " ",
 		// "format-icons":
 		// "rotate":
-		"min-length": 6,
-		"max-length": 6,
+		"min-length": 4,
+		"max-length": 4,
 		// "align":
 		// "justify":
 		// "on-click": "",
