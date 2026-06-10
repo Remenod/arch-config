@@ -59,13 +59,8 @@ msi_ec_write() {
             notify-send "MSI EC" "Failed to write $rel=$value" -i "dialog-error" 2>/dev/null || true
             return 1
         fi
-    elif command -v sudo >/dev/null 2>&1; then
-        if ! printf '%s\n' "$value" | sudo tee "$file" >/dev/null; then
-            notify-send "MSI EC" "Root permission required for $rel=$value" -i "dialog-error" 2>/dev/null || true
-            return 1
-        fi
     else
-        notify-send "MSI EC" "Root permission required, but sudo was not found" -i "dialog-error" 2>/dev/null || true
+        notify-send "MSI EC" "No write access to $rel" -i "dialog-error" 2>/dev/null || true
         return 1
     fi
 }
