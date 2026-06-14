@@ -1,9 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/hyprshot.lock"
+LOCK_DIR="${XDG_RUNTIME_DIR:-/tmp}/hyprshot.lock"
+PID_FILE="$LOCK_DIR/pid"
 
-(
-    flock -n 9 || exit 0
-    hyprshot "$@"
-) 9>"$LOCK_FILE"
+cleanup() {
+    if [[ -r "$PID_FILE" ]] && [[ "$(<"$PID_FILE")" == "$$" ]]; then
+        rm -rf "$LOCK_DIR"
+    fi
+}
+
+lock() {
+    local owner
+
+    while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+        if [[ -f "$LOCK_DIR" ]]; then
+            rm -f "$LOCK_DIR"
+            continue
+        fi
+
+        owner="$(cat "$PID_FILE" 2>/dev/null || true)"
+        if [[ -n "$owner" ]] && ! kill -0 "$owner" 2>/dev/null; then
+            rm -rf "$LOCK_DIR"
+            continue
+        fi
+
+        exit 0
+    done
+
+    printf '%s\n' "$$" > "$PID_FILE"
+    trap cleanup EXIT INT TERM HUP
+}
+
+lock
+hyprshot "$@"
