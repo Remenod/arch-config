@@ -4,8 +4,8 @@ set -euo pipefail
 MSI_EC_BASE="${MSI_EC_BASE:-/sys/devices/platform/msi-ec}"
 WEBCAM_FILE="$MSI_EC_BASE/webcam"
 BLOCK_FILE="$MSI_EC_BASE/webcam_block"
-ICON_ON="󱦿"
-ICON_OFF="󰵝"
+ICON_ON="󰵝"
+ICON_OFF="󱦿"
 ICON_LOCK="󱨕"
 
 json_escape() {
@@ -30,8 +30,8 @@ camera_state() {
 	local webcam="$1"
 
 	case $webcam in
-		on)  printf "off" ;;
-		off) printf "on" ;;
+		on)  printf "on" ;;
+		off) printf "off" ;;
 		*)   printf "unknown" ;;
 	esac
 }
