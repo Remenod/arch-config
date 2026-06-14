@@ -1,0 +1,68 @@
+@import "style.css";
+
+#waybar.portrait * {
+	font-size: 15px;
+}
+
+#waybar.portrait > box {
+	margin: 3px;
+}
+
+#waybar.portrait button {
+	padding: 0 1px;
+}
+
+#waybar.portrait #workspaces {
+	padding: 0;
+}
+
+#waybar.portrait #workspaces button {
+	padding: 0 1px;
+}
+
+#waybar.portrait #custom-fan,
+#waybar.portrait #temperature,
+#waybar.portrait #network,
+#waybar.portrait #custom-camera,
+#waybar.portrait #custom-system_update {
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+#waybar.portrait #clock.time,
+#waybar.portrait #clock.date {
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+#waybar.portrait #custom-distro {
+	padding: 0 7px 0 4px;
+}
+
+#waybar.portrait #custom-left_inv.1 {
+	color: @temperature;
+}
+
+#waybar.portrait #custom-left_div.6 {
+	color: @volume;
+}
+
+#waybar.portrait #pulseaudio,
+#waybar.portrait #backlight,
+#waybar.portrait #custom-kbd-backlight,
+#waybar.portrait #battery,
+#waybar.portrait #custom-powerprofile {
+	padding-left: 2px;
+	padding-right: 2px;
+}
+
+#waybar.portrait #custom-power_menu {
+	padding: 0 13px 0 10px;
+}
+
+#waybar.portrait #custom-left_div,
+#waybar.portrait #custom-left_inv,
+#waybar.portrait #custom-right_div,
+#waybar.portrait #custom-right_inv {
+	font-size: 20px;
+}

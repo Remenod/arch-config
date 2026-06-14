@@ -42,3 +42,8 @@ esac
 hyprctl keyword monitor "$name, preferred, ${x}x${y}, $scale, transform, $next" >/dev/null
 
 notify "Display rotation" "$name: $label"
+
+if [[ -x "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/waybar-adaptive.sh" ]]; then
+    sleep 0.2
+    "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/waybar-adaptive.sh" reload
+fi
