@@ -1,42 +1,36 @@
+[Unit]
+Description=bottom system monitor on tty1
+Documentation=man:btm(1)
+After=systemd-user-sessions.service plymouth-quit-wait.service getty-pre.target systemd-vconsole-setup.service
+Before=getty.target
+Conflicts=getty@tty1.service rescue.service
+Before=rescue.service
+ConditionPathExists=/dev/tty1
+IgnoreOnIsolate=yes
 
 [Service]
-Type=simple
-Nice=19
-ExecStartPre=/usr/bin/setvtrgb /etc/myvtcolors.txt
-ExecStart=/usr/bin/btm --battery --network_use_bytes --enable_cache_memory --hide-k-threads --show_table_scroll_position --tree -r 2s -m
+Type=idle
 User=remenod
-TTYVTDisallocate=yes
-
 PAMName=login
-TTYPath=/dev/tty1
-TTYReset=no
-TTYVHangup=no
+WorkingDirectory=/home/remenod
+Environment=TERM=linux
+Nice=19
+ExecStartPre=-/usr/bin/setvtrgb /etc/myvtcolors.txt
+ExecStart=/usr/bin/btm --battery --network_use_bytes --enable_cache_memory --hide-k-threads --show_table_scroll_position --tree -r 2s -m
 StandardInput=tty
 StandardOutput=tty
-
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
 UtmpIdentifier=tty1
 UtmpMode=user
-
 Restart=always
+RestartSec=2s
 KillMode=control-group
+IgnoreSIGPIPE=no
+SendSIGHUP=yes
 
 [Install]
-WantedBy=multi-user.target
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+WantedBy=getty.target

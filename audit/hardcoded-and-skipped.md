@@ -24,7 +24,6 @@ Most of these can probably become `$HOME`, `~`, or repo-relative helper paths.
 - `home/.config/shared/scripts/kbd_backlight.sh` uses OpenRGB device index defaults, so it depends on detected device order.
 - `home/.config/OpenRGB/OpenRGB.json` is intentionally tracked without logs, but it is hardware/device specific.
 - `system/etc/udev/rules.d/99-sayodevice.rules` grants access for USB vendor `8089`, apparently for SayoDevice hardware.
-- `system/etc/systemd/system/tty1-btm.service:7` contains `User=remenod`.
-- `system/etc/systemd/system/tty1-btm.service:11` binds the service to `/dev/tty1`.
+- `system/etc/systemd/system/tty1-btm.service` contains `User=remenod` and is intentionally bound to `/dev/tty1` as a `getty@tty1` replacement.
 
 Good next step: split monitors, MSI EC controls, OpenRGB, and the tty1 service into a host-specific layer.
