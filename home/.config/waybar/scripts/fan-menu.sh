@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=msi-ec.sh
-source "$script_dir/msi-ec.sh"
+shared_dir="${XDG_CONFIG_HOME:-$HOME/.config}/shared/scripts"
+# shellcheck source=../../shared/scripts/msi-ec.sh
+source "$shared_dir/msi-ec.sh"
 
 pause_on_error() {
     local message="$1"

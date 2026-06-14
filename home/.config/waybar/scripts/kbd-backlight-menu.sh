@@ -8,7 +8,7 @@
 
 set -euo pipefail
 
-KBD_SCRIPT="${KBD_OPENRGB_SCRIPT:-$HOME/.config/waybar/scripts/kbd_backlight.sh}"
+KBD_SCRIPT="${KBD_OPENRGB_SCRIPT:-$HOME/.config/shared/scripts/kbd_backlight.sh}"
 LOW_COLOR="${KBD_OPENRGB_LOW_COLOR:-808080}"
 
 main() {

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=msi-ec.sh
-source "$HOME/.config/waybar/scripts/msi-ec.sh"
+shared_dir="${XDG_CONFIG_HOME:-$HOME/.config}/shared/scripts"
+# shellcheck source=../../shared/scripts/msi-ec.sh
+source "$shared_dir/msi-ec.sh"
 
 notify() {
     notify-send "$1" "$2" -i "$3" \

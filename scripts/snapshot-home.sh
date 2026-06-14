@@ -16,6 +16,7 @@ paths=(
   ".config/bottom"
   ".config/fastfetch"
   ".config/gtk-3.0"
+  ".config/shared"
   ".config/hypr"
   ".config/mako"
   ".config/mpv"
