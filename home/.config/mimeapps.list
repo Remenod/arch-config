@@ -7,6 +7,7 @@ x-scheme-handler/unknown=firefox.desktop
 x-scheme-handler/tg=userapp-AyuGram Desktop-NM3LQ3.desktop
 x-scheme-handler/tonsite=userapp-AyuGram Desktop-MQANQ3.desktop
 x-scheme-handler/claude=claude.desktop
+x-scheme-handler/discord-1296840202995896363=discord-1296840202995896363.desktop
 
 [Added Associations]
 x-scheme-handler/tg=userapp-AyuGram Desktop-NM3LQ3.desktop;
