@@ -2,16 +2,16 @@
 # zsh completion for rrf.sh — the RepRapFirmware workspace manager.
 #
 # Completes the sub-command and, for build/rebuild, the available firmware
-# targets. Targets are read live from RepRapFirmware/.cproject in the workspace
-# (the directory the ./rrf.sh being completed lives in, or $PWD), so they stay
-# correct as configurations are added/removed; a static list is the fallback
-# when the checkout isn't present.
+# targets. Targets are read live from repos/RepRapFirmware/.cproject in the
+# workspace (the directory the ./rrf.sh being completed lives in, or $PWD), so
+# they stay correct as configurations are added/removed; a static list is the
+# fallback when the checkout isn't present.
 
 # Echo the buildable target names, one per line.
 _rrf_targets() {
   local cmd=${words[1]} ws cproj
   if [[ $cmd == */* ]]; then ws=${cmd:h}; else ws=$PWD; fi   # :h = dirname
-  cproj=$ws/RepRapFirmware/.cproject
+  cproj=$ws/repos/RepRapFirmware/.cproject
 
   if [[ -r $cproj ]]; then
     grep -oE '<configuration[^>]* name="[^"]+"' $cproj 2>/dev/null \
