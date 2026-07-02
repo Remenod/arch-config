@@ -123,5 +123,6 @@
     "explorer.confirmDelete": false,
     "go.inlayHints.ignoredError": true,
     "chat.disableAIFeatures": true,
-    "diffEditor.maxComputationTime": 0
+    "diffEditor.maxComputationTime": 0,
+    "claudeCode.preferredLocation": "panel"
 }

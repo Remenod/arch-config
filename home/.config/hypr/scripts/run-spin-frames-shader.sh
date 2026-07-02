@@ -3,7 +3,8 @@ set -euo pipefail
 
 TEMPLATE="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/shaders/spin-frame-template.frag"
 RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp}/hypr-spin-shader"
-LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/hypr-spin-shader.lock"
+LOCK_DIR="${XDG_RUNTIME_DIR:-/tmp}/hypr-screen-shader-effect.lock"
+PID_FILE="$LOCK_DIR/pid"
 
 # Налаштування ефекту.
 # 1.0 = один повний оберт.
@@ -53,6 +54,41 @@ get_bool_option() {
     esac
 }
 
+get_str_option() {
+    local opt="$1"
+    local fallback="$2"
+
+    get_option_json "$opt" | jq -r '.str // .value // empty' 2>/dev/null || {
+        printf "%s\n" "$fallback"
+    }
+}
+
+acquire_lock() {
+    local owner
+
+    mkdir -p "$RUNTIME_DIR"
+
+    while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+        owner="$(cat "$PID_FILE" 2>/dev/null || true)"
+        if [[ -n "$owner" ]] && ! kill -0 "$owner" 2>/dev/null; then
+            rm -rf "$LOCK_DIR"
+            continue
+        fi
+
+        exit 0
+    done
+
+    printf '%s\n' "$$" > "$PID_FILE"
+}
+
+restore_shader() {
+    if [[ -n "${old_shader:-}" ]]; then
+        hyprctl keyword decoration:screen_shader "$old_shader" >/dev/null 2>&1 || true
+    else
+        hyprctl keyword decoration:screen_shader "" >/dev/null 2>&1 || true
+    fi
+}
+
 if [[ ! -f "$TEMPLATE" ]]; then
     notify "Spin shader" "Template not found: $TEMPLATE"
     exit 1
@@ -70,24 +106,25 @@ command -v python >/dev/null 2>&1 || command -v python3 >/dev/null 2>&1 || {
 
 PYTHON_BIN="$(command -v python || command -v python3)"
 
-exec 9>"$LOCK_FILE"
-if ! flock -n 9; then
-    exit 0
-fi
-
-mkdir -p "$RUNTIME_DIR"
+acquire_lock
 
 old_damage="$(get_int_option "debug:damage_tracking" "2")"
 old_vfr="$(get_bool_option "debug:vfr" "true")"
+old_shader="$(get_str_option "decoration:screen_shader" "")"
 
 cleanup() {
-    hyprctl keyword decoration:screen_shader "" >/dev/null 2>&1 || true
+    restore_shader
     hyprctl keyword debug:damage_tracking "$old_damage" >/dev/null 2>&1 || true
     hyprctl keyword debug:vfr "$old_vfr" >/dev/null 2>&1 || true
     rm -f "$RUNTIME_DIR"/frame-*.frag 2>/dev/null || true
+
+    if [[ -r "$PID_FILE" ]] && [[ "$(<"$PID_FILE")" == "$$" ]]; then
+        rm -rf "$LOCK_DIR"
+    fi
 }
 
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT TERM HUP
 
 hyprctl --batch "\
 keyword debug:damage_tracking 0 ; \

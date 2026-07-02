@@ -5,7 +5,7 @@
 # This group of options represents a command-line option. Flags explicitly
 # added when running (ie: btm -a) will override this config file if an option
 # is also set here.
-[flags]
+# [flags]
 # Whether to hide the average cpu entry.
 #hide_avg_cpu = false
 
@@ -315,3 +315,38 @@
 #  [[row.child]]
 #    type="proc"
 #    default=true
+
+[flags]
+rate = "1s"
+default_time_value = "60s"
+retention = "10m"
+show_table_scroll_bar = true
+table_gap = "line"
+
+[cpu]
+show_decimal = true
+
+[network_graph]
+#show_packets = true
+use_bytes = true
+legend_position = "top-right"
+
+[temperature]
+default_sort = "Temp"
+
+[temperature_graph]
+legend_position = "top-right"
+max_temp = 100.0
+
+[disk]
+columns = ["Disk", "Mount", "Used", "Free", "Total", "Used%", "R/s", "W/s"]
+default_sort = "R/s"
+include_unmounted = true
+
+[disk_io_graph]
+show_read = true
+show_write = true
+legend = "mount"
+legend_position = "top-right"
+include_unmounted = true
+
