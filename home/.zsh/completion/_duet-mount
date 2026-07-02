@@ -1,0 +1,89 @@
+#compdef duet-mount
+# zsh completion for duet-mount — mount Duet RRF printers via duet-httpfs.
+#
+# Completes the global options, the sub-command, and (for the commands that
+# take one) the configured printer aliases read from the duet-mount config.
+# mount/umount additionally offer "all"; mount prefers not-yet-mounted printers
+# and umount prefers mounted ones, falling back to every alias so nothing is
+# ever hidden. Mount state is read from /proc/self/mounts (never stats the FUSE
+# filesystem, so a hung/dead mount can't make completion block).
+
+# Print configured printer aliases filtered by mount state.
+#   $1 = all | mounted | unmounted   (default: all)
+_duet_mount_aliases_by_state() {
+  local want=${1:-all}
+  local conf="${XDG_CONFIG_HOME:-$HOME/.config}/duet-mount/printers.conf"
+  [[ -r $conf ]] || return 0
+
+  # Currently-mounted duet mount points, decoding octal-escaped spaces.
+  local -a mps
+  mps=( ${(f)"$(awk '$3 ~ /^fuse\.duet-httpfs/ {gsub(/\\040/, " ", $2); print $2}' \
+                   /proc/self/mounts 2>/dev/null)"} )
+
+  local base="$HOME/duet" al url root mp rest state
+  while IFS='|' read -r al url root mp rest; do
+    al=${al//[[:space:]]/}                       # aliases never contain spaces
+    [[ -z $al || $al[1] == '#' ]] && continue
+    mp="${mp#"${mp%%[![:space:]]*}"}"            # trim leading ws
+    mp="${mp%"${mp##*[![:space:]]}"}"            # trim trailing ws
+    [[ -z $mp ]] && mp="$base/$al"               # default mount point
+    if (( ${mps[(Ie)$mp]} )); then state=mounted; else state=unmounted; fi
+    [[ $want == all || $want == $state ]] && print -r -- $al
+  done < $conf
+}
+
+_duet-mount() {
+  local curcontext="$curcontext" state line expl ret=1
+  typeset -A opt_args
+  local -a a
+
+  _arguments -C \
+    '(- *)'{-h,--help}'[show help and exit]' \
+    '(-q --quiet)'{-q,--quiet}'[suppress progress messages]' \
+    '1: :->command' \
+    '*:: :->args' && ret=0
+
+  case $state in
+    command)
+      local -a cmds=(
+        'mount:mount a printer (or all)'
+        'umount:unmount a printer (or all)'
+        'status:show status of configured printers'
+        'list:alias for status'
+        'add:add a printer to the config'
+        'remove:remove a printer from the config'
+        'edit:edit the config in $EDITOR'
+        'log:follow a printer log file'
+        'help:show help'
+      )
+      _describe -t commands 'duet-mount command' cmds && ret=0
+      ;;
+    args)
+      case ${line[1]} in
+        mount|m)
+          a=( ${(f)"$(_duet_mount_aliases_by_state unmounted)"} )
+          (( $#a )) || a=( ${(f)"$(_duet_mount_aliases_by_state all)"} )
+          _wanted printers expl 'printer' compadd -a a && ret=0
+          _wanted all      expl 'all printers' compadd all && ret=0
+          ;;
+        umount|u|un)
+          a=( ${(f)"$(_duet_mount_aliases_by_state mounted)"} )
+          (( $#a )) || a=( ${(f)"$(_duet_mount_aliases_by_state all)"} )
+          _wanted printers expl 'printer' compadd -a a && ret=0
+          _wanted all      expl 'all printers' compadd all && ret=0
+          ;;
+        remove|rm|r|log)
+          a=( ${(f)"$(_duet_mount_aliases_by_state all)"} )
+          _wanted printers expl 'printer' compadd -a a && ret=0
+          ;;
+        add|a)
+          _message -e args 'alias url [root] [mountpoint] [password] [extra-opts]' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_duet-mount "$@"
