@@ -1,0 +1,13 @@
+-- Hyprland config entrypoint.
+require("conf.00-core")
+require("conf.10-monitors")
+require("conf.20-programs")
+require("conf.30-autostart")
+require("conf.40-environment")
+require("conf.50-permissions")
+require("conf.60-appearance")
+require("conf.65-workspace-rules")
+require("conf.70-layouts")
+require("conf.80-input")
+require("conf.90-binds")
+require("conf.95-windowrules")

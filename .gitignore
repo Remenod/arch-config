@@ -9,6 +9,9 @@ home/.zcompdump*
 *.log
 home/.config/waybar/.fan_control_status
 home/.local/share/applications/mimeinfo.cache
+# Hyprland auto-writes this stub hyprland.conf on reload even when hyprland.lua
+# is present and takes priority; config now lives in home/.config/hypr/{hyprland.lua,conf/}.
+home/.config/hypr/hyprland.conf
 
 # Secrets and machine identity files intentionally not adopted
 home/.ssh/

@@ -1,0 +1,12 @@
+-- See https://wiki.hypr.land/Configuring/Basics/Autostart/
+hl.on("hyprland.start", function()
+    hl.exec_cmd("~/.config/shared/scripts/kbd_backlight.sh restore")
+    hl.exec_cmd("~/.config/shared/scripts/volume.sh sync-leds")
+    hl.exec_cmd("ydotoold")
+    hl.exec_cmd("~/.config/waybar/scripts/waybar-adaptive.sh run")
+    hl.exec_cmd("mako")
+    hl.exec_cmd("telegram-desktop -startintray")
+    hl.exec_cmd("kdeconnect-indicator")
+    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE && systemctl --user restart xdg-desktop-portal-hyprland xdg-desktop-portal")
+    hl.exec_cmd("xwaylandvideobridge")
+end)
