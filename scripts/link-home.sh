@@ -14,6 +14,7 @@ paths=(
   ".gitconfig"
   ".nanorc"
   ".zshrc"
+  ".zsh"
   ".nano"
   ".config/code-flags.conf"
   ".config/mimeapps.list"
