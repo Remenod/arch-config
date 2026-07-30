@@ -7,3 +7,5 @@
 [user]
 	name = Remenod
 	email = remenod@gmail.com
+[color]
+	ui = auto

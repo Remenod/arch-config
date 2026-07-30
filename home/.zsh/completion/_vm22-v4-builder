@@ -1,0 +1,43 @@
+#compdef build.sh
+# zsh completion for build.sh — the vm22-v4-builder firmware packager.
+#
+# Completes --type, --no-version-hash, and for --patch/--exclude, the
+# available debug patches. Patches are read live from debugPatches/ next to
+# the build.sh being completed (or $PWD), so they stay correct as patches
+# are added/removed.
+
+# Echo every selectable patch name: "all", each category, and each
+# "category/name" patch, one per line.
+_vm22_v4_builder_patches() {
+  local cmd=${words[1]} root dir
+  if [[ $cmd == */* ]]; then root=${cmd:h}; else root=$PWD; fi   # :h = dirname
+  dir=$root/debugPatches
+
+  local -a items
+  items=(all)
+  if [[ -d $dir ]]; then
+    items+=( ${(f)"$(cd "$dir" && find . -mindepth 1 \( -type d -o -name '*.patch' \) \
+      | sed 's#^\./##; s#\.patch$##' | sort -u)"} )
+  fi
+  print -l -- $items
+}
+
+# --patch/--exclude both accept repeatable, comma-separated patch names.
+_vm22_v4_builder_patch_values() {
+  local -a items
+  items=( ${(f)"$(_vm22_v4_builder_patches)"} )
+  _values -s , 'debug patch' $items
+}
+
+_vm22-v4-builder() {
+  _arguments -C \
+    '(- *)'{-h,--help}'[show help and exit]' \
+    '(-t --type)'{-t,--type}'[select build type]:type:(ota clean)' \
+    '--debug[enable debug build (latest debug firmware + patches)]' \
+    '*--patch[debug patch or category to apply]: :_vm22_v4_builder_patch_values' \
+    '*--exclude[debug patch or category to exclude from --patch]: :_vm22_v4_builder_patch_values' \
+    '--list-patches[list available debug patches and exit]' \
+    '--no-version-hash[omit the version hash from the output zip filename]'
+}
+
+_vm22-v4-builder "$@"
