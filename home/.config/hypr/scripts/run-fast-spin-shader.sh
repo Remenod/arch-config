@@ -60,17 +60,12 @@ old_damage="$(get_int_option "debug:damage_tracking" "2")"
 old_vfr="$(get_bool_option "debug:vfr" "true")"
 
 cleanup() {
-    hyprctl keyword decoration:screen_shader "" >/dev/null 2>&1 || true
-    hyprctl keyword debug:damage_tracking "$old_damage" >/dev/null 2>&1 || true
-    hyprctl keyword debug:vfr "$old_vfr" >/dev/null 2>&1 || true
+    hyprctl eval "hl.config({ decoration = { screen_shader = \"\" }, debug = { damage_tracking = $old_damage, vfr = $old_vfr } })" >/dev/null 2>&1 || true
 }
 
 trap cleanup EXIT INT TERM
 
-# hyprctl синхронний; для кількох команд краще batch.
-hyprctl --batch "\
-keyword debug:damage_tracking 0 ; \
-keyword debug:vfr false ; \
-keyword decoration:screen_shader $SHADER" >/dev/null
+# hyprctl синхронний; краще один eval, ніж кілька keyword-викликів.
+hyprctl eval "hl.config({ debug = { damage_tracking = 0, vfr = false }, decoration = { screen_shader = \"$SHADER\" } })" >/dev/null
 
 sleep "$DURATION"

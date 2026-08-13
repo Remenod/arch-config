@@ -83,9 +83,9 @@ acquire_lock() {
 
 restore_shader() {
     if [[ -n "${old_shader:-}" ]]; then
-        hyprctl keyword decoration:screen_shader "$old_shader" >/dev/null 2>&1 || true
+        hyprctl eval "hl.config({ decoration = { screen_shader = \"$old_shader\" } })" >/dev/null 2>&1 || true
     else
-        hyprctl keyword decoration:screen_shader "" >/dev/null 2>&1 || true
+        hyprctl eval 'hl.config({ decoration = { screen_shader = "" } })' >/dev/null 2>&1 || true
     fi
 }
 
@@ -114,8 +114,7 @@ old_shader="$(get_str_option "decoration:screen_shader" "")"
 
 cleanup() {
     restore_shader
-    hyprctl keyword debug:damage_tracking "$old_damage" >/dev/null 2>&1 || true
-    hyprctl keyword debug:vfr "$old_vfr" >/dev/null 2>&1 || true
+    hyprctl eval "hl.config({ debug = { damage_tracking = $old_damage, vfr = $old_vfr } })" >/dev/null 2>&1 || true
     rm -f "$RUNTIME_DIR"/frame-*.frag 2>/dev/null || true
 
     if [[ -r "$PID_FILE" ]] && [[ "$(<"$PID_FILE")" == "$$" ]]; then
@@ -126,9 +125,7 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 130' INT TERM HUP
 
-hyprctl --batch "\
-keyword debug:damage_tracking 0 ; \
-keyword debug:vfr false" >/dev/null
+hyprctl eval 'hl.config({ debug = { damage_tracking = 0, vfr = false } })' >/dev/null
 
 frame_sleep="$("$PYTHON_BIN" - <<PY
 duration = float("$DURATION")
@@ -158,6 +155,6 @@ PY
     shader="$RUNTIME_DIR/frame-$i.frag"
     sed "s/__ANGLE__/$angle/g" "$TEMPLATE" > "$shader"
 
-    hyprctl keyword decoration:screen_shader "$shader" >/dev/null
+    hyprctl eval "hl.config({ decoration = { screen_shader = \"$shader\" } })" >/dev/null
     sleep "$frame_sleep"
 done

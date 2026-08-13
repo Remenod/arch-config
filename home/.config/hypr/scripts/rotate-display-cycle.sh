@@ -39,7 +39,7 @@ esac
 # preferred = не хардкодимо resolution/refresh
 # ${x}x${y} = залишаємо поточну позицію монітора в layout
 # scale = залишаємо поточний scale
-hyprctl keyword monitor "$name, preferred, ${x}x${y}, $scale, transform, $next" >/dev/null
+hyprctl eval "hl.monitor({ output = \"$name\", mode = \"preferred\", position = \"${x}x${y}\", scale = $scale, transform = $next })" >/dev/null
 
 notify "Display rotation" "$name: $label"
 

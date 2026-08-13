@@ -78,16 +78,15 @@ acquire_lock() {
 
 restore_shader() {
     if [[ -n "${old_shader:-}" ]]; then
-        hyprctl keyword decoration:screen_shader "$old_shader" >/dev/null 2>&1 || true
+        hyprctl eval "hl.config({ decoration = { screen_shader = \"$old_shader\" } })" >/dev/null 2>&1 || true
     else
-        hyprctl keyword decoration:screen_shader "" >/dev/null 2>&1 || true
+        hyprctl eval 'hl.config({ decoration = { screen_shader = "" } })' >/dev/null 2>&1 || true
     fi
 }
 
 cleanup() {
     restore_shader
-    hyprctl keyword debug:damage_tracking "${old_damage:-2}" >/dev/null 2>&1 || true
-    hyprctl keyword debug:vfr "${old_vfr:-true}" >/dev/null 2>&1 || true
+    hyprctl eval "hl.config({ debug = { damage_tracking = ${old_damage:-2}, vfr = ${old_vfr:-true} } })" >/dev/null 2>&1 || true
     rm -f "$STOP_FILE" "$RUNTIME_DIR"/frame-*.frag 2>/dev/null || true
 
     if [[ -r "$PID_FILE" ]] && [[ "$(<"$PID_FILE")" == "$$" ]]; then
@@ -129,9 +128,7 @@ start_effect() {
     trap cleanup EXIT
     trap 'exit 130' INT TERM HUP
 
-    hyprctl --batch "\
-keyword debug:damage_tracking 0 ; \
-keyword debug:vfr false" >/dev/null
+    hyprctl eval 'hl.config({ debug = { damage_tracking = 0, vfr = false } })' >/dev/null
 
     "$python_bin" - "$TEMPLATE" "$RUNTIME_DIR" "$STOP_FILE" "$FPS" "$MAX_RPS" "$ACCEL_TIME" "$DECEL_TIME" "$RETURN_TIME" <<'PY'
 import math
@@ -172,7 +169,7 @@ def render(angle: float) -> None:
     frame_index += 1
     shader.write_text(template.replace("__ANGLE__", f"{normalized_angle(angle):.9f}"))
     subprocess.run(
-        ["hyprctl", "keyword", "decoration:screen_shader", str(shader)],
+        ["hyprctl", "eval", f'hl.config({{ decoration = {{ screen_shader = "{shader}" }} }})'],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=False,
