@@ -179,11 +179,21 @@ msi_ec_display_speed() {
 
 msi_ec_fan_speed_label() {
     local value="$1"
+    local percent="${2:-}"
 
-    if msi_ec_is_int "$value"; then
-        printf '%s RPM' "$value"
-    else
+    if ! msi_ec_is_int "$value"; then
         printf '%s' "$value"
+        return
+    fi
+
+    if (( value == 0 )); then
+        printf 'idle'
+    else
+        printf '%s RPM' "$value"
+    fi
+
+    if msi_ec_is_int "$percent"; then
+        printf ' (%s%%)' "$percent"
     fi
 }
 
@@ -267,10 +277,12 @@ msi_ec_fan_json() {
         return 0
     fi
 
-    local cpu_rpm gpu_rpm cpu_display gpu_display cpu_temp gpu_temp fan_mode cooler active_fans total_rpm display_rpm icon tooltip class rpm_pair rpm_note
+    local cpu_rpm gpu_rpm cpu_display gpu_display cpu_pct gpu_pct fan_mode cooler active_fans total_rpm display_rpm icon tooltip class rpm_pair rpm_note
 
-    cpu_temp="$(msi_ec_read cpu/realtime_temperature '?' || true)"
-    gpu_temp="$(msi_ec_read gpu/realtime_temperature '?' || true)"
+    # Temperatures deliberately stay out of here - that is the temperature
+    # module's job, see ~/.config/waybar/scripts/temperature.sh.
+    cpu_pct="$(msi_ec_read cpu/realtime_fan_speed '' || true)"
+    gpu_pct="$(msi_ec_read gpu/realtime_fan_speed '' || true)"
     fan_mode="$(msi_ec_read fan_mode unknown || true)"
     cooler="$(msi_ec_read cooler_boost unknown || true)"
 
@@ -308,13 +320,13 @@ msi_ec_fan_json() {
     fi
 
     icon="$(msi_ec_fan_icon "$cooler" "$fan_mode" "$active_fans")"
-    printf -v tooltip 'Fan mode: %s\nCooler Boost: %s\nCPU: %sC / %s\nGPU: %sC / %s' \
+    printf -v tooltip '<b>Fan mode</b>  %s\n<b>Cooler Boost</b>  %s\nCPU fan  %s\nGPU fan  %s' \
         "$fan_mode" \
         "$cooler" \
-        "$cpu_temp" \
-        "$(msi_ec_fan_speed_label "$cpu_rpm")" \
-        "$gpu_temp" \
-        "$(msi_ec_fan_speed_label "$gpu_rpm")"
+        "$(msi_ec_fan_speed_label "$cpu_rpm" "$cpu_pct")" \
+        "$(msi_ec_fan_speed_label "$gpu_rpm" "$gpu_pct")"
+
+    tooltip+=$'\n'"<span alpha='55%'>click for menu · right-click toggles boost</span>"
 
     if [[ "$rpm_note" != "isw" ]]; then
         tooltip+=$'\n'"RPM source: $rpm_note"
@@ -347,6 +359,17 @@ msi_ec_profile_json() {
         "$pp_icon" "$(msi_ec_json_escape "$tooltip")" "$(msi_ec_json_escape "$class")"
 }
 
+msi_ec_toggle_boost() {
+    local current next
+
+    current="$(msi_ec_read cooler_boost off || true)"
+    [[ "$current" == "on" ]] && next="off" || next="on"
+
+    msi_ec_write cooler_boost "$next" || return 1
+    notify-send "MSI EC" "Cooler Boost: $next" -i "dialog-ok" 2>/dev/null || true
+    pkill -RTMIN+4 waybar 2>/dev/null || true
+}
+
 msi_ec_main() {
     local attr
 
@@ -359,6 +382,9 @@ msi_ec_main() {
             ;;
         fan-json)
             msi_ec_fan_json
+            ;;
+        toggle-boost)
+            msi_ec_toggle_boost
             ;;
         profile-json)
             msi_ec_profile_json
@@ -383,7 +409,7 @@ msi_ec_main() {
             powerprofiles_set "${2:?missing power profile}"
             ;;
         *)
-            printf 'Usage: %s {read ATTR|write ATTR VALUE|fan-json|profile-json|profile|profile-attr|profiles|set-profile PROFILE|powerprofiles|set-powerprofile PROFILE}\n' "$0" >&2
+            printf 'Usage: %s {read ATTR|write ATTR VALUE|fan-json|toggle-boost|profile-json|profile|profile-attr|profiles|set-profile PROFILE|powerprofiles|set-powerprofile PROFILE}\n' "$0" >&2
             return 2
             ;;
     esac

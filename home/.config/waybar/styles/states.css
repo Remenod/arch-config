@@ -18,17 +18,19 @@
 #mpris.paused,
 #pulseaudio.output.muted,
 #pulseaudio.input.source-muted,
-#wireplumber.muted {
+#wireplumber.muted,
+#custom-system_update.updated {
 	color: @hover-fg;
 }
 
+#custom-temperature.warning,
 #memory.warning,
 #cpu.warning,
 #battery.warning {
 	color: @warning;
 }
 
-#temperature.critical,
+#custom-temperature.critical,
 #memory.critical,
 #cpu.critical,
 #battery.critical {
@@ -39,30 +41,74 @@
 	color: @charging;
 }
 
-/* --- КОНТЕКСТНЕ МЕНЮ (ПРАВИЙ КЛІК) --- */
+#custom-system_update.checking,
+#custom-system_update.upgrading {
+	animation-name: su-pulse;
+	animation-duration: 0.8s;
+	animation-timing-function: ease-in-out;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+}
+
+#custom-system_update.reboot {
+	animation-name: su-pulse;
+	animation-duration: 2s;
+	animation-timing-function: ease-in-out;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+}
+
+#custom-system_update.error {
+	animation-name: su-blink;
+	animation-duration: 1.6s;
+	animation-timing-function: ease-in-out;
+	animation-iteration-count: infinite;
+}
+
+@keyframes su-pulse {
+	from {
+		color: @main-fg;
+	}
+
+	to {
+		color: alpha(@main-fg, 0.3);
+	}
+}
+
+@keyframes su-blink {
+	0% {
+		color: @main-fg;
+	}
+
+	50% {
+		color: alpha(@main-fg, 0.15);
+	}
+
+	100% {
+		color: @main-fg;
+	}
+}
+
 menu {
-    background-color: @main-bg;
-    border: 2px solid @main-br; /* Така ж рамка, як у ваших підказок */
-    border-radius: 10px;
-    padding: 6px;
+	background-color: @main-bg;
+	border: 2px solid @main-br;
+	border-radius: 10px;
+	padding: 6px;
 }
 
-/* Окремі пункти меню */
 menuitem {
-    border-radius: 6px;
-    padding: 6px 10px;
-    color: @main-fg;
-    transition: all 0.2s ease-in-out;
+	border-radius: 6px;
+	padding: 6px 10px;
+	color: @main-fg;
+	transition: all 0.2s ease-in-out;
 }
 
-/* Наведення на пункт меню */
 menuitem:hover {
-    background-color: @hover-bg; /* Колір @base з вашої теми */
-    color: @accent; /* Текст стає лавандовим при наведенні */
+	background-color: @hover-bg;
+	color: @accent;
 }
 
-/* Роздільники в меню */
 menu separator {
-    margin: 4px 0;
-    border-bottom: 1px solid @main-br;
+	margin: 4px 0;
+	border-bottom: 1px solid @main-br;
 }

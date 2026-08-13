@@ -1,13 +1,14 @@
 {
 	"custom/system_update": {
+		// Continuous module: the script stays alive and prints one JSON line
+		// per state change, which is what makes the fetching animation work.
+		// Do NOT add "interval" here - that would turn it back into a
+		// one-shot exec and kill the spinner.
 		"exec": "~/.config/waybar/scripts/system-update.sh module",
 		// "exec-if":
-		// "exec-on-event":
 		// "hide-empty-text":
 		"return-type": "json",
-		"interval": 3600,
-		// "restart-interval":
-		"signal": 1,
+		"restart-interval": 5,
 		"format": "{}",
 		// "format-icons":
 		// "rotate":
@@ -16,8 +17,8 @@
 		"min-length": 2,
 		"max-length": 2,
 		"on-click": "alacritty -e ~/.config/waybar/scripts/system-update.sh",
-		// "on-click-middle":
-		"on-click-right": "pkill -RTMIN+1 waybar"
+		"on-click-middle": "alacritty -e ~/.config/waybar/scripts/system-update.sh list",
+		"on-click-right": "~/.config/waybar/scripts/system-update.sh refresh"
 		// "on-update":
 		// "on-scroll-up":
 		// "on-scroll-down":

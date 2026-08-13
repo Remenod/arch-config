@@ -54,7 +54,7 @@
 	"modules-center": [
 		"custom/left_div#2",
 		"custom/fan",
-		"temperature",
+		"custom/temperature",
 		"custom/left_inv#1",
 		"custom/left_div#5",
 		"custom/distro",

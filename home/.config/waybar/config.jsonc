@@ -101,7 +101,7 @@
 	"modules-center": [
 		"custom/left_div#2",
 		"custom/fan",
-		"temperature",
+		"custom/temperature",
 		"custom/left_div#3",
 		"memory",
 		"custom/left_div#4",
