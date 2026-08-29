@@ -32,8 +32,11 @@
 		},
 		// "move-to-monitor":
 		// "ignore-workspaces":
-		"on-scroll-up": "hyprctl dispatch workspace +1",
-		"on-scroll-down": "hyprctl dispatch workspace -1",
+		// Hyprland's Lua config uses the non-legacy parser, so IPC "dispatch"
+		// args are evaluated as Lua. The old "dispatch workspace +1" form is a
+		// syntax error there and silently does nothing.
+		"on-scroll-up": "hyprctl dispatch 'hl.dsp.focus({ workspace = \"+1\" })'",
+		"on-scroll-down": "hyprctl dispatch 'hl.dsp.focus({ workspace = \"-1\" })'",
 		// "expand":
 		"cursor": true
 	}
