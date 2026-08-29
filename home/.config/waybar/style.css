@@ -6,6 +6,18 @@
 	color: @main-fg;
 }
 
+/* Waybar past 0.15 sets the module name and its "#id" class on the module's
+   container instead of on its label. Without this, the "*" rules pin color and
+   font directly on every label, so "#module { color/font-size: ... }" never
+   reaches the text: glyphs render in @main-fg and dividers lose their height. */
+label {
+	color: inherit;
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: inherit;
+	font-style: inherit;
+}
+
 @import "styles/fonts.css";
 @import "styles/modules-center.css";
 @import "styles/modules-left.css";
