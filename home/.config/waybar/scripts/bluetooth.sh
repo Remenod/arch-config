@@ -13,10 +13,27 @@
 
 TIMEOUT=10
 
+SCAN_PID=""
+
 cprintf() {
 	printf "\e[31m"
 	printf "%b\n" "$@"
 	printf "\e[39m"
+}
+
+# Ends the background scan. If the scanning client is killed abruptly - by
+# closing the terminal, or by one of the exit paths below - BlueZ can keep the
+# discovery session with no owner. The adapter then keeps hopping the 2.4GHz
+# band, which starves A2DP audio until it is power-cycled, and no later
+# "bluetoothctl scan off" can clear it.
+stop_scan() {
+	[[ -n $SCAN_PID ]] || return 0
+
+	kill "$SCAN_PID" 2> /dev/null
+	wait "$SCAN_PID" 2> /dev/null
+	SCAN_PID=""
+
+	bluetoothctl scan off > /dev/null 2>&1
 }
 
 power_on() {
@@ -60,6 +77,8 @@ power_on() {
 
 get_devices() {
 	bluetoothctl -t $TIMEOUT scan on > /dev/null &
+	SCAN_PID=$!
+	trap 'stop_scan; printf "\e[?25h"' EXIT INT TERM HUP
 
 	local num
 	local i=1
@@ -78,6 +97,7 @@ get_devices() {
 		fi
 	done
 
+	stop_scan
 	cprintf "\nScanning stopped.\n"
 
 	LIST=$(bluetoothctl devices | sed "s/^Device //")
