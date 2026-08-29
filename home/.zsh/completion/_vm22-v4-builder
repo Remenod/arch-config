@@ -1,5 +1,9 @@
-#compdef build.sh
+#compdef -p *vm22-v4-builder/build.sh
 # zsh completion for build.sh — the vm22-v4-builder firmware packager.
+#
+# Bound to a path pattern rather than to the command name: zsh looks completions
+# up by both the typed word and its last component, so registering "build.sh"
+# would apply this file to every build.sh on the machine.
 #
 # Completes --type, --no-version-hash, and for --patch/--exclude, the
 # available debug patches. Patches are read live from debugPatches/ next to
@@ -30,6 +34,11 @@ _vm22_v4_builder_patch_values() {
 }
 
 _vm22-v4-builder() {
+  # The pattern above matches only this project's own script, so nothing else
+  # should contribute to it — including any other completion bound to the
+  # generic name "build.sh".
+  _compskip=all
+
   _arguments -C \
     '(- *)'{-h,--help}'[show help and exit]' \
     '(-t --type)'{-t,--type}'[select build type]:type:(ota clean)' \

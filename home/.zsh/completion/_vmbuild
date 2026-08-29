@@ -1,0 +1,86 @@
+#compdef -p *vm-build/build.sh
+# zsh completion for Tools/vm-build/build.sh.
+#
+# Bound to a path pattern rather than to the command name: zsh looks completions
+# up by both the typed word and its last component, so registering "build.sh"
+# would apply this file to every build.sh on the machine.
+#
+# Install by adding this directory to $fpath, before compinit:
+#   fpath=(~/VisionMiner/duet/RepRapFirmware/Tools/vm-build/completion $fpath)
+#
+# If the script is symlinked into $PATH under a unique name, register that name
+# as well:
+#   compdef _vmbuild vmfw
+#
+# Targets come from targets.conf, which defines what this build system builds;
+# the configurations present in .cproject are used as a fallback when that file
+# cannot be read.
+
+_vmbuild_script_dir() {
+  local cmd=${words[1]}
+  if [[ $cmd == */* ]]; then print -r -- ${cmd:h}; else print -r -- $PWD/Tools/vm-build; fi
+}
+
+_vmbuild_targets() {
+  local dir=$(_vmbuild_script_dir)
+  if [[ -r $dir/targets.conf ]]; then
+    grep -oE '^[[:space:]]*"[A-Za-z0-9_]+\|' $dir/targets.conf 2>/dev/null \
+      | sed 's/[^"]*"//; s/|$//'
+  elif [[ -r $dir/../../.cproject ]]; then
+    grep -oE '<configuration[^>]* name="[^"]+"' $dir/../../.cproject 2>/dev/null \
+      | sed 's/.*name="//; s/"$//' | sort -u
+  fi
+}
+
+_vmbuild() {
+  local curcontext="$curcontext" state line expl ret=1
+  typeset -A opt_args
+  local -a t
+
+  # The pattern above matches only this script's own path, so nothing else may
+  # contribute to it. Without this, a global binding for the generic name
+  # "build.sh" — a different project's build script, for instance — would be
+  # dispatched as well and mix its options into the list.
+  _compskip=all
+
+  _arguments -C \
+    '(- *)'{-h,--help}'[show help and exit]' \
+    '1: :->command' \
+    '*:: :->args' && ret=0
+
+  case $state in
+    command)
+      local -a cmds=(
+        'doctor:check the environment and report what is missing'
+        'bootstrap:fetch toolchain and libraries, install CrcAppender'
+        'build:incremental build of a target'
+        'rebuild:clean build from a fresh Eclipse workspace'
+        'release-build:reproducible build of the current commit'
+        'clean:remove build outputs and Eclipse metadata'
+        'targets:list the configured targets'
+        'help:show usage'
+      )
+      _describe -t commands 'build.sh command' cmds && ret=0
+      ;;
+    args)
+      case ${line[1]} in
+        build|rebuild|release-build|release)
+          t=( ${(f)"$(_vmbuild_targets)"} )
+          _wanted targets expl 'build target' compadd -a t && ret=0
+          ;;
+        bootstrap|setup)
+          _arguments \
+            '--sync[move clean library checkouts onto their pinned commits]' \
+            '--with-wifi-fw[also fetch ESP8266 sources and the Xtensa toolchain]' && ret=0
+          ;;
+        clean)
+          _arguments '--deps[also clean build output in the library repositories]' && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_vmbuild "$@"
