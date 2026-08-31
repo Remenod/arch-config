@@ -7,6 +7,9 @@
 #                              state change for a *continuous* Waybar module
 #                              (no "interval" in the module config)
 #   system-update.sh refresh   ask the running daemon to re-check right now
+#   system-update.sh click     what the Waybar left click runs: an upgrade
+#                              normally, a reboot prompt once a kernel
+#                              upgrade has made a restart necessary
 #   system-update.sh list      show the pending updates in a pager
 #   system-update.sh           interactive upgrade (run inside a terminal)
 #
@@ -16,6 +19,7 @@
 # Requirements:
 # - checkupdates (pacman-contrib)
 # - notify-send (libnotify)
+# - fzf (reboot prompt)
 # - Optional: An AUR helper
 #
 # Author:  Jesse Mirabel <sejjymvm@gmail.com>
@@ -36,6 +40,11 @@ UPGRADE_GUARD=${UPGRADE_GUARD:-1800}  # give up on a stuck "upgrading" state
 CACHE_TTL=${CACHE_TTL:-30}        # share a fetch between bars for this long
 
 HELPERS=(paru yay aura pikaur trizen)
+
+# Terminals spawned by the click actions. The popup class is the one Hyprland
+# floats and centres, so it must stay in sync with the window rule.
+TERM_CMD=(alacritty)
+POPUP_CMD=(alacritty --class alacritty-popup-menu)
 
 # md-circle-slice-1..8, a filling pie used as the spinner
 SPINNER=(󰪞 󰪟 󰪠 󰪡 󰪢 󰪣 󰪤 󰪥)
@@ -287,7 +296,7 @@ emit_spinner() {
 }
 
 emit_result() {
-	local total=$((PAC_UPD + AUR_UPD)) tooltip icon alt classes reboot=false
+	local total=$((PAC_UPD + AUR_UPD)) tooltip icon alt classes reboot=false hint
 
 	if $FAILURE; then
 		tooltip="<b>Update check failed</b>"
@@ -323,7 +332,10 @@ emit_result() {
 		tooltip+=$'\n'"<b>Reboot required</b>  <span alpha='55%'>(kernel was upgraded)</span>"
 	fi
 
-	tooltip+=$'\n'"<span alpha='55%'>Checked at $(date +%H:%M) · left-click upgrade · middle-click list · right-click refresh</span>"
+	hint="left-click upgrade"
+	$reboot && hint="left-click reboot"
+
+	tooltip+=$'\n'"<span alpha='55%'>Checked at $(date +%H:%M) · $hint · middle-click list · right-click refresh</span>"
 
 	classes="\"$alt\""
 	$reboot && classes="[\"$alt\",\"reboot\"]"
@@ -420,6 +432,55 @@ start_daemon() {
 }
 
 #--------------------------------------------------------------------
+# left click
+#--------------------------------------------------------------------
+
+# Once the kernel has been upgraded another "pacman -Syu" is a no-op, while a
+# restart is the thing that is actually still pending - so the left click
+# swaps roles instead of only recolouring the icon. It goes through a prompt
+# because a stray click on the bar must not reboot the machine outright.
+handle_click() {
+	if reboot_pending; then
+		exec "${POPUP_CMD[@]}" -e "$0" reboot-menu
+	fi
+
+	exec "${TERM_CMD[@]}" -e "$0" upgrade
+}
+
+reboot_menu() {
+	local list=(
+		"reboot"$'\t'"$ICON_REBOOT  Reboot now"
+		"poweroff"$'\t'"󰐥  Shut down"
+		"upgrade"$'\t'"$ICON_PENDING  Upgrade anyway"
+		"cancel"$'\t'"󰜺  Cancel"
+	)
+
+	local options=(
+		"--border=sharp"
+		"--border-label= Reboot Required "
+		"--height=~100%"
+		"--highlight-line"
+		"--no-input"
+		"--pointer="
+		"--reverse"
+		"--delimiter=\t"
+		"--with-nth=2.."
+	)
+
+	local selected
+	selected=$(printf "%s\n" "${list[@]}" | fzf "${options[@]}") || exit 0
+
+	case ${selected%%$'\t'*} in
+		reboot)   systemctl reboot ;;
+		poweroff) systemctl poweroff ;;
+		# The popup is a small floating window, so hand the upgrade its own
+		# terminal and detach it before this one closes.
+		upgrade)  setsid -f "${TERM_CMD[@]}" -e "$0" upgrade ;;
+		*)        exit 0 ;;
+	esac
+}
+
+#--------------------------------------------------------------------
 # interactive
 #--------------------------------------------------------------------
 
@@ -492,13 +553,16 @@ update_packages() {
 
 usage() {
 	cat << EOF
-Usage: ${0##*/} [module|refresh|list|upgrade]
+Usage: ${0##*/} [module|refresh|list|upgrade|click|reboot-menu]
 
   (no argument)  upgrade the system interactively
   upgrade        same as above
   module         run the Waybar daemon (JSON lines on stdout)
   refresh        tell the running daemon to check for updates now
   list           show the pending updates and exit
+  click          Waybar left click: upgrade, or prompt to reboot when a
+                 kernel upgrade has made a restart necessary
+  reboot-menu    show that reboot prompt (run inside a terminal)
 EOF
 }
 
@@ -513,6 +577,12 @@ main() {
 			;;
 		"list")
 			list_updates
+			;;
+		"click")
+			handle_click
+			;;
+		"reboot-menu")
+			reboot_menu
 			;;
 		"" | "upgrade")
 			get_helper
