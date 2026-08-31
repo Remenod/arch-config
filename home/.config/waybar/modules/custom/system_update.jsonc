@@ -16,7 +16,10 @@
 		// "justify":
 		"min-length": 2,
 		"max-length": 2,
-		"on-click": "alacritty -e ~/.config/waybar/scripts/system-update.sh",
+		// The script picks the action: an upgrade normally, a reboot prompt
+		// once a kernel upgrade has made a restart necessary. It spawns its
+		// own terminal, so none is wrapped around it here.
+		"on-click": "~/.config/waybar/scripts/system-update.sh click",
 		"on-click-middle": "alacritty -e ~/.config/waybar/scripts/system-update.sh list",
 		"on-click-right": "~/.config/waybar/scripts/system-update.sh refresh"
 		// "on-update":
