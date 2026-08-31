@@ -32,7 +32,7 @@
 	background-color: @memory;
 	color: @cpu;
 }
-#cpu {
+#custom-cpu {
 	background-color: @cpu;
 }
 #custom-left_inv.1 {

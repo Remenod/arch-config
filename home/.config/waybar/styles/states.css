@@ -25,16 +25,21 @@
 
 #custom-temperature.warning,
 #memory.warning,
-#cpu.warning,
+#custom-cpu.warning,
 #battery.warning {
 	color: @warning;
 }
 
 #custom-temperature.critical,
 #memory.critical,
-#cpu.critical,
+#custom-cpu.critical,
 #battery.critical {
 	color: @critical;
+}
+
+/* a single thread saturated while the package average still reads idle */
+#custom-cpu.pegged {
+	color: @pegged;
 }
 
 #battery.charging {

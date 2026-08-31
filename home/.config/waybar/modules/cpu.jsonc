@@ -1,27 +1,42 @@
 {
-	"cpu": {
-		"interval": 1,
-		"format": "󰍛 {usage}%",
-		"format-warning": "󰀨 {usage}%",
-		"format-critical": "󰀨 {usage}%",
+	// Custom module instead of Waybar's built-in "cpu". {usage} there is the
+	// mean over every thread, so a saturated single thread reads as 100/nproc
+	// - about 6% on a 16-thread part - while the package still clocks up and
+	// heats up. The script adds a one-glyph gauge for the *busiest* thread and
+	// a tooltip that breaks the load down per physical core, next to the
+	// processes actually burning it.
+	// See ~/.config/waybar/scripts/cpu.sh.
+	"custom/cpu": {
+		// Continuous module: the script stays alive and keeps the previous
+		// /proc/stat sample in memory. Do NOT add "interval" here - that would
+		// restart it every tick, leaving nothing to diff the counters against.
+		"exec": "~/.config/waybar/scripts/cpu.sh module",
+		// "exec-if":
+		// "hide-empty-text":
+		"return-type": "json",
+		"restart-interval": 5,
+		"format": "{}",
 		// "format-icons":
-		"min-length": 8,
-		"max-length": 8,
+		// "rotate":
 		// "align":
 		// "justify":
-		// "rotate":
-		"states": {
-			"warning": 75,
-			"critical": 90
-		},
-		// "on-click":
+		// "󰍛 100% █" is exactly eight cells, the same width as before.
+		"min-length": 8,
+		"max-length": 8,
+		// Opens btop/htop/btm/top, whichever is installed.
+		"on-click": "~/.config/waybar/scripts/cpu.sh top"
 		// "on-click-middle":
 		// "on-click-right":
 		// "on-update":
 		// "on-scroll-up":
 		// "on-scroll-down":
 		// "smooth-scrolling-threshold":
-		"tooltip": false
+		// "tooltip":
+		// "tooltip-format":
+		// "escape":
+		// "menu":
+		// "menu-file":
+		// "menu-actions":
 		// "expand":
 	}
 }
