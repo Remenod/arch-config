@@ -1,20 +1,27 @@
 {
-	"memory": {
-		"interval": 1,
-		"format": "󰘚 {percentage}%",
-		"format-warning": "󰀧 {percentage}%",
-		"format-critical": "󰀧 {percentage}%",
+	// Custom module instead of Waybar's built-in "memory". The built-in can
+	// only put {used}/{total} on a tooltip line; what it leaves out is where
+	// the memory actually went - how much is reclaimable cache, what has been
+	// pushed into swap and how far zram squeezed it, whether anything is
+	// stalling on memory, and which processes hold the rest.
+	// See ~/.config/waybar/scripts/memory.sh.
+	"custom/memory": {
+		// /proc/meminfo is absolute, so unlike the cpu module this needs no
+		// deltas and stays a plain interval script rather than a daemon.
+		"exec": "~/.config/waybar/scripts/memory.sh module",
+		// "exec-if":
+		// "hide-empty-text":
+		"return-type": "json",
+		"interval": 3,
+		"format": "{}",
 		// "format-icons":
 		// "rotate":
-		"states": {
-			"warning": 75,
-			"critical": 90
-		},
-		"min-length": 8,
-		"max-length": 8,
 		// "align":
 		// "justify":
-		// "on-click":
+		"min-length": 8,
+		"max-length": 8,
+		// Opens btop/htop/btm/top, whichever is installed.
+		"on-click": "~/.config/waybar/scripts/memory.sh top"
 		// "on-click-middle":
 		// "on-click-right":
 		// "on-update":
@@ -22,7 +29,8 @@
 		// "on-scroll-down":
 		// "smooth-scrolling-threshold":
 		// "tooltip":
-		"tooltip-format": "Memory Used: {used:0.0f}/{total:0.0f} GB"
+		// "tooltip-format":
+		// "escape":
 		// "menu":
 		// "menu-file":
 		// "menu-actions":

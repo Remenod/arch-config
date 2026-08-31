@@ -103,7 +103,7 @@
 		"custom/fan",
 		"custom/temperature",
 		"custom/left_div#3",
-		"memory",
+		"custom/memory",
 		"custom/left_div#4",
 		"custom/cpu",
 		"custom/left_inv#1",

@@ -32,7 +32,7 @@ SPLIT_AT=${SPLIT_AT:-12}           # more cores than this, list them in 2 column
 THEME_EVERY=${THEME_EVERY:-30}     # re-read the palette every N ticks
 
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/waybar"
-THEME_FILE="$CONFIG_DIR/theme.css"
+THEME_FILE=${THEME_FILE:-"$CONFIG_DIR/theme.css"}
 RUNDIR="${XDG_RUNTIME_DIR:-/tmp}/waybar-cpu"
 PROC_PREV="$RUNDIR/proc-$$.tsv"
 

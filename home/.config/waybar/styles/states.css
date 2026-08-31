@@ -24,22 +24,24 @@
 }
 
 #custom-temperature.warning,
-#memory.warning,
+#custom-memory.warning,
 #custom-cpu.warning,
 #battery.warning {
 	color: @warning;
 }
 
 #custom-temperature.critical,
-#memory.critical,
+#custom-memory.critical,
 #custom-cpu.critical,
 #battery.critical {
 	color: @critical;
 }
 
-/* a single thread saturated while the package average still reads idle */
-#custom-cpu.pegged {
-	color: @pegged;
+/* a single thread saturated while the package average still reads idle, and
+   tasks actually stalling on memory rather than merely filling it */
+#custom-cpu.pegged,
+#custom-memory.pressure {
+	color: @saturated;
 }
 
 #battery.charging {

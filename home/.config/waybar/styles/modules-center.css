@@ -20,7 +20,7 @@
 	background-color: @temperature;
 	color: @memory;
 }
-#memory {
+#custom-memory {
 	background-color: @memory;
 }
 
