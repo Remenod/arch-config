@@ -1,0 +1,16 @@
+# RX 6700M dGPU (Navi 22) runtime power management.
+#
+# amdgpu cuts the dGPU's power (BOCO: it and its PCIe switch go to D3cold)
+# once it has been idle for power/autosuspend_delay_ms, 5000 ms by default.
+# Every sensor read while it is up restarts that timer, so btm on tty1 and the
+# Waybar temperature module, both polling every 2 s, kept it powered for good
+# after anything woke it: ~6 W at idle. 900 ms is shorter than the largest gap
+# two 2 s pollers can leave, so they can no longer hold it awake. While it is
+# off they skip it, so they never wake it either.
+#
+# wheel may change the delay: the Waybar power menu sets 100 ms for "force off"
+# and 900 ms for "auto" (~/.config/shared/scripts/dgpu.sh).
+ACTION=="add|bind", SUBSYSTEM=="pci", DRIVER=="amdgpu", ATTR{vendor}=="0x1002", ATTR{device}=="0x73df", \
+  ATTR{power/autosuspend_delay_ms}="900", \
+  RUN+="/usr/bin/chgrp wheel /sys%p/power/autosuspend_delay_ms", \
+  RUN+="/usr/bin/chmod 0664 /sys%p/power/autosuspend_delay_ms"

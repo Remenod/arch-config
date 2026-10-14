@@ -24,6 +24,7 @@ system_files=(
   /etc/sysctl.d/99-zram.conf
   /etc/tmpfiles.d/msi-ec-mute-leds.conf
   /etc/udev/rules.d/99-sayodevice.rules
+  /etc/udev/rules.d/80-dgpu-runtime-pm.rules
   /etc/systemd/system/tty1-btm.service
   /etc/myvtcolors.txt
 )

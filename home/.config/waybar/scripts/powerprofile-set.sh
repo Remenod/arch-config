@@ -4,6 +4,8 @@ set -euo pipefail
 shared_dir="${XDG_CONFIG_HOME:-$HOME/.config}/shared/scripts"
 # shellcheck source=../../shared/scripts/msi-ec.sh
 source "$shared_dir/msi-ec.sh"
+# shellcheck source=../../shared/scripts/dgpu.sh
+source "$shared_dir/dgpu.sh"
 
 pause_on_error() {
     local title="$1"
@@ -17,6 +19,7 @@ pause_on_error() {
 
 power_current="$(powerprofiles_current || true)"
 shift_current="$(msi_ec_profile || true)"
+dgpu_current="$(dgpu_mode || true)"
 
 list=()
 if powerprofiles_available; then
@@ -64,6 +67,25 @@ else
     list+=("noop:"$'\t'"  msi-ec unavailable")
 fi
 
+if dgpu_available; then
+    dgpu_header="dGPU: $(dgpu_state || true)"
+    dgpu_writable || dgpu_header+=", udev rule missing"
+    list+=("noop:"$'\t'"── $dgpu_header ──")
+
+    for mode in auto off; do
+        case "$mode" in
+            auto) icon="󰢮"; label="Auto" ;;
+            off) icon=""; label="Force off" ;;
+        esac
+
+        prefix=""
+        [[ "$mode" == "$dgpu_current" ]] && prefix="* "
+        list+=("dgpu:$mode"$'\t'"$icon  $prefix$label dGPU")
+    done
+else
+    list+=("noop:"$'\t'"  dGPU unavailable")
+fi
+
 options=(
     "--border=sharp"
     "--border-label= Power Profiles "
@@ -95,6 +117,13 @@ case "$kind" in
             exit 1
         fi
         notify-send "MSI EC" "MSI shift: $value" -i "dialog-ok" 2>/dev/null || true
+        ;;
+    dgpu)
+        if ! dgpu_set_mode "$value"; then
+            pause_on_error "dGPU" "Failed to set dGPU mode to $value"
+            exit 1
+        fi
+        notify-send "dGPU" "dGPU: $value" -i "dialog-ok" 2>/dev/null || true
         ;;
     *)
         exit 0
