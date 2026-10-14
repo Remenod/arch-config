@@ -45,18 +45,22 @@ alias ...=../..
 alias ....=../../..
 alias .....=../../../..
 alias ......=../../../../..
+
 alias history='history 1'
 alias h=history
 alias hl='history | less'
 alias hs='history | grep'
+
 alias l='ls -lah'
-alias lt='ls -lah --tree --ignore-glob=.git'
-alias la='ls -lAh'
-alias lat='ls -lAh --tree --ignore-glob=.git'
+alias lt='l --tree --ignore-glob=.git'
+alias ltd='lt --only-dirs'
 alias ll='ls -lh'
 alias llt='ls -lh --tree --ignore-glob=.git'
+alias ltd='llt --only-dirs'
+
 alias md='mkdir -p'
 alias rd=rmdir
+
 alias run='setsid "$@" >/dev/null 2>&1 < /dev/null &'
 alias sudo='sudo '
 
@@ -64,7 +68,7 @@ ae () {
     alacritty -e bash -c "$1"
     disown
 }
- 
+
 autoload -Uz history-search-end
 
 zle -N history-beginning-search-backward-end history-search-end
@@ -97,5 +101,6 @@ export XDG_CACHE_HOME="$HOME/.cache"
 export ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/zcompdump"
 
 export PATH="$PATH:/home/remenod/opt/cross/bin"
-export PATH=$PATH:/opt/android-sdk/platform-tools
+export PATH="$PATH:/opt/android-sdk/platform-tools"
 export PATH="$PATH:/home/remenod/.local/bin"
+export PATH="$PATH:/home/remenod/.cargo/bin"
