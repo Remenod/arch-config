@@ -96,14 +96,27 @@ scan_sensors() {
     done | sort -t'|' -k1,1n -k2,2 | cut -d'|' -f2-
 }
 
+# A powered-off device has no reading: amdgpu refuses temp*_input while the
+# dGPU sits in D3cold (and does not wake it for that), so say "off" instead
+# of "?".
 read_temp() {
-    local raw
+    local raw state="${1%/*}/device/power_state"
 
+    [[ -r $state && $(< "$state") == D3cold ]] && { printf 'off'; return 1; }
     [[ -r $1 ]] || { printf '?'; return 1; }
     raw="$(< "$1")"
     [[ $raw =~ ^-?[0-9]+$ ]] || { printf '?'; return 1; }
 
     printf '%s' $(((raw + 500) / 1000))
+}
+
+# "45 °C" for a reading, the bare word ("off", "?") otherwise.
+with_unit() {
+    if [[ $1 =~ ^-?[0-9]+$ ]]; then
+        printf '%s%s' "$1" "$2"
+    else
+        printf '%s' "$1"
+    fi
 }
 
 selected_key() {
@@ -154,9 +167,9 @@ build_tooltip() {
         temp="$(read_temp "$path" || true)"
 
         if [[ $key == "$active" ]]; then
-            line="$(printf '%s  <b>%-12s %3s °C</b>' "$icon" "$(pango_escape "$label")" "$temp")"
+            line="$(printf '%s  <b>%-12s %6s</b>' "$icon" "$(pango_escape "$label")" "$(with_unit "$temp" ' °C')")"
         else
-            line="$(printf '%s  %-12s %3s °C' "$icon" "$(pango_escape "$label")" "$temp")"
+            line="$(printf '%s  %-12s %6s' "$icon" "$(pango_escape "$label")" "$(with_unit "$temp" ' °C')")"
         fi
 
         out+="$line"$'\n'
@@ -192,8 +205,8 @@ module() {
 
     tooltip="$(build_tooltip "$sensors" "$key")"
 
-    printf '{"text":"%s %s°C","tooltip":"%s","class":"%s"}\n' \
-        "$icon" "$temp" "$(json_escape "$tooltip")" "$class"
+    printf '{"text":"%s %s","tooltip":"%s","class":"%s"}\n' \
+        "$icon" "$(with_unit "$temp" '°C')" "$(json_escape "$tooltip")" "$class"
 }
 
 menu() {
@@ -206,7 +219,7 @@ menu() {
         [[ -n $key ]] || continue
         temp="$(read_temp "$path" || true)"
         [[ $key == "$active" ]] && prefix="* " || prefix="  "
-        list+=("$key"$'\t'"$icon  $prefix$(printf '%-12s %3s °C' "$label" "$temp")")
+        list+=("$key"$'\t'"$icon  $prefix$(printf '%-12s %6s' "$label" "$(with_unit "$temp" ' °C')")")
     done <<< "$sensors"
 
     selected="$(printf '%s\n' "${list[@]}" | fzf \
