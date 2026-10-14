@@ -22,6 +22,9 @@ hl.config({
 
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Gestures/
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+-- Toggle the magic special workspace; up and down are bound separately so either direction toggles
+hl.gesture({ fingers = 3, direction = "up",   action = "special", workspace_name = "magic" })
+hl.gesture({ fingers = 3, direction = "down", action = "special", workspace_name = "magic" })
 
 -- Example per-device config
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Devices/ for more
