@@ -12,61 +12,112 @@ setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_SAVE_NO_DUPS
 setopt HIST_FIND_NO_DUPS
 
-source ~/.local/share/zinit/zinit.git/zinit.zsh
+export NO_AT_BRIDGE=1
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/zcompdump"
 
-zinit ice lucid
-zinit light zsh-users/zsh-autosuggestions
+# Set PATH before anything below looks up commands in it.
+# -U drops duplicates; (N-/) skips entries that are not directories here.
+typeset -U path
+path+=(
+    $HOME/opt/cross/bin(N-/)
+    /opt/android-sdk/platform-tools(N-/)
+    $HOME/.local/bin(N-/)
+    $HOME/.cargo/bin(N-/)
+)
 
-zinit ice wait lucid
-zinit light zsh-users/zsh-syntax-highlighting
+# Install zinit on first start; without it (no git, no network) the shell
+# still starts, just without the plugins.
+ZINIT_HOME="$XDG_DATA_HOME/zinit/zinit.git"
+if [[ ! -r $ZINIT_HOME/zinit.zsh ]] && (( $+commands[git] )); then
+    print -P "%F{blue}Installing zinit into $ZINIT_HOME%f"
+    mkdir -p "${ZINIT_HOME:h}" &&
+        git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
 
-zinit ice wait lucid
-zinit light zsh-users/zsh-completions
+if [[ -r $ZINIT_HOME/zinit.zsh ]]; then
+    source "$ZINIT_HOME/zinit.zsh"
+
+    zinit ice lucid
+    zinit light zsh-users/zsh-autosuggestions
+
+    zinit ice wait lucid
+    zinit light zsh-users/zsh-syntax-highlighting
+
+    zinit ice wait lucid
+    zinit light zsh-users/zsh-completions
+
+    zinit ice wait lucid
+    zinit light zsh-users/zsh-history-substring-search
+fi
+
 zstyle ':completion:*' menu select
 zstyle ':completion:*' group-name ''
 zstyle ':completion:*' list-colors ''
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
-zinit ice wait lucid
-zinit light zsh-users/zsh-history-substring-search
 fpath=(~/.zsh/completion/ $fpath)
 
+# compinit ignores ZSH_COMPDUMP on its own; -d is what moves the dump.
 autoload -Uz compinit
-compinit
+mkdir -p "${ZSH_COMPDUMP:h}"
+compinit -d "$ZSH_COMPDUMP"
 
 export EDITOR=nano
 
-alias ls='eza --icons always'
 alias clr='clear'
 alias copy='wl-copy'
-alias cp='advcp -gi'
-alias mv='advmv -gi'
 alias ...=../..
 alias ....=../../..
 alias .....=../../../..
 alias ......=../../../../..
+
+# Fall back to the plain tools where eza or advcpmv is not installed.
+if (( $+commands[eza] )); then
+    alias ls='eza --icons=always'
+    alias l='ls -lah'
+    alias lt='l --tree --ignore-glob=.git'
+    alias ltd='lt --only-dirs'
+    alias ll='ls -lh'
+    alias llt='ll --tree --ignore-glob=.git'
+    alias lltd='llt --only-dirs'
+else
+    alias ls='ls --color=auto'
+    alias l='ls -lah'
+    alias ll='ls -lh'
+fi
+
+if (( $+commands[advcp] )); then
+    alias cp='advcp -gi'
+else
+    alias cp='cp -i'
+fi
+
+if (( $+commands[advmv] )); then
+    alias mv='advmv -gi'
+else
+    alias mv='mv -i'
+fi
 
 alias history='history 1'
 alias h=history
 alias hl='history | less'
 alias hs='history | grep'
 
-alias l='ls -lah'
-alias lt='l --tree --ignore-glob=.git'
-alias ltd='lt --only-dirs'
-alias ll='ls -lh'
-alias llt='ls -lh --tree --ignore-glob=.git'
-alias ltd='llt --only-dirs'
-
 alias md='mkdir -p'
 alias rd=rmdir
 
-alias run='setsid "$@" >/dev/null 2>&1 < /dev/null &'
 alias sudo='sudo '
 
-ae () {
-    alacritty -e bash -c "$1"
-    disown
+# Start a program detached from this terminal: run firefox
+run() {
+    setsid "$@" >/dev/null 2>&1 </dev/null &!
+}
+
+# Run a command in a new terminal window: ae 'htop'
+ae() {
+    alacritty -e bash -c "$1" &!
 }
 
 autoload -Uz history-search-end
@@ -95,12 +146,3 @@ bindkey '^[[F' end-of-line
 bindkey '^[[3~' delete-char
 
 PROMPT='%F{green}%n@%m%f:%F{blue}%~%f$ '
-
-export NO_AT_BRIDGE=1
-export XDG_CACHE_HOME="$HOME/.cache"
-export ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/zcompdump"
-
-export PATH="$PATH:/home/remenod/opt/cross/bin"
-export PATH="$PATH:/opt/android-sdk/platform-tools"
-export PATH="$PATH:/home/remenod/.local/bin"
-export PATH="$PATH:/home/remenod/.cargo/bin"
