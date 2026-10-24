@@ -1,0 +1,43 @@
+{
+	"custom/notifications": {
+		// Continuous module: the script prints one JSON line on every
+		// notification change, so no "interval" or "signal".
+		"exec": "~/.config/waybar/scripts/notifications.sh",
+		// "exec-if":
+		// "hide-empty-text":
+		"return-type": "json",
+		"restart-interval": 5,
+		"format": "{icon}{text}",
+		"format-icons": {
+			"notification": "󰂚",
+			"none": "󰂜",
+			"dnd-notification": "󰂛",
+			"dnd-none": "󰂛",
+			"inhibited-notification": "󰂚",
+			"inhibited-none": "󰂜",
+			"dnd-inhibited-notification": "󰂛",
+			"dnd-inhibited-none": "󰂛"
+		},
+		// "rotate":
+		// Same width as the placeholder this replaced, so the centre group
+		// stays balanced around the distro icon.
+		"min-length": 4,
+		"max-length": 4,
+		"align": 0.5,
+		// "justify":
+		"on-click": "swaync-client -t -sw",
+		"on-click-middle": "~/.config/swaync/scripts/archive.sh open",
+		"on-click-right": "swaync-client -d -sw",
+		// "on-update":
+		// "on-scroll-up":
+		// "on-scroll-down":
+		// "smooth-scrolling-threshold":
+		"tooltip": true
+		// "tooltip-format":
+		// "escape":
+		// "menu":
+		// "menu-file":
+		// "menu-actions":
+		// "expand":
+	}
+}

@@ -11,6 +11,7 @@
 		"~/.config/waybar/modules/bluetooth.jsonc",
 		"~/.config/waybar/modules/custom/camera.jsonc",
 		"~/.config/waybar/modules/custom/system_update.jsonc",
+		"~/.config/waybar/modules/custom/notifications.jsonc",
 		"~/.config/waybar/modules/pulseaudio.jsonc",
 		"~/.config/waybar/modules/backlight.jsonc",
 		"~/.config/waybar/modules/custom/kbd_backlight.jsonc",
@@ -68,6 +69,7 @@
 		"network",
 		"bluetooth",
 		"custom/camera",
+		"custom/notifications",
 		"custom/right_div#5"
 	],
 	"modules-right": [

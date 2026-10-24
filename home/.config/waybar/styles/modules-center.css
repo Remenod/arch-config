@@ -116,6 +116,9 @@
 #custom-plaseholder {
 	background-color: @tray;
 }
+#custom-notifications {
+	background-color: @tray;
+}
 #custom-right_div.5 {
 	color: @tray;
 }
