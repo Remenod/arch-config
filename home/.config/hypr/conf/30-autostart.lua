@@ -1,6 +1,8 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Autostart/
 hl.on("hyprland.start", function()
     hl.exec_cmd("~/.config/shared/scripts/kbd_backlight.sh restore")
+    -- Hibernation resets the keyboard's RGB controller; this re-applies the colour on resume.
+    hl.exec_cmd("~/.config/shared/scripts/kbd_backlight.sh watch")
     hl.exec_cmd("~/.config/shared/scripts/volume.sh sync-leds")
     hl.exec_cmd("ydotoold")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")

@@ -13,9 +13,12 @@ ZONE="${OPENRGB_ZONE:-}"
 MODE="${OPENRGB_MODE:-Static}"
 
 STATE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/keyboard-openrgb-color"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/keyboard-openrgb.lock"
+WATCH_PID_FILE="${XDG_RUNTIME_DIR:-/tmp}/keyboard-openrgb-watch.pid"
+WAYBAR_SIGNAL=5
 
 notify() {
-    notify-send "$1" "$2" -i "$3" \
+    notify-send "$1" "$2" -i "$3" "${@:4}" \
         -h string:x-canonical-private-synchronous:keyboard-openrgb 2>/dev/null || true
 }
 
@@ -34,6 +37,41 @@ openrgb_client() {
     "$OPENRGB_BIN" --client "$OPENRGB_SERVER" "$@"
 }
 
+# The Waybar module has no interval: it redraws on this signal only.
+refresh_waybar() {
+    pkill -x -RTMIN+"$WAYBAR_SIGNAL" waybar 2>/dev/null || true
+}
+
+# Runs "$@" holding the lock. Without it two quick presses of the backlight
+# key both read the same saved colour and both step to the same next one.
+with_lock() {
+    local fd rc=0
+
+    exec {fd}> "$LOCK_FILE"
+    flock "$fd"
+    "$@" || rc=$?
+    exec {fd}>&-
+    return "$rc"
+}
+
+# Sends a normalized colour to the keyboard and saves it. Quiet on failure,
+# so that restore_color can retry.
+apply_color() {
+    local args=(--device "$DEVICE")
+
+    if [[ -n "$ZONE" ]]; then
+        args+=(--zone "$ZONE")
+    fi
+
+    args+=(--mode "$MODE" --color "$1")
+
+    openrgb_client "${args[@]}" >/dev/null 2>&1 || return 1
+
+    mkdir -p "$(dirname "$STATE_FILE")"
+    printf "%s\n" "$1" > "$STATE_FILE"
+    refresh_waybar
+}
+
 set_color() {
     local color
     color="$(normalize_color "$1")" || {
@@ -41,21 +79,10 @@ set_color() {
         return 1
     }
 
-    local args=(--device "$DEVICE")
-
-    if [[ -n "$ZONE" ]]; then
-        args+=(--zone "$ZONE")
-    fi
-
-    args+=(--mode "$MODE" --color "$color")
-
-    if ! openrgb_client "${args[@]}" >/dev/null 2>&1; then
+    if ! apply_color "$color"; then
         notify "Keyboard Backlight" "OpenRGB client failed. Is openrgb.service running?" "dialog-error"
         return 1
     fi
-
-    mkdir -p "$(dirname "$STATE_FILE")"
-    printf "%s\n" "$color" > "$STATE_FILE"
 }
 
 read_color() {
@@ -104,6 +131,72 @@ classify_color() {
     esac
 }
 
+cycle_color() {
+    case "$(read_color)" in
+        000000)
+            set_color "808080" && notify "Keyboard Backlight" "Low" "keyboard-brightness" -e
+            ;;
+        808080)
+            set_color "FFFFFF" && notify "Keyboard Backlight" "High" "keyboard-brightness" -e
+            ;;
+        FFFFFF)
+            set_color "000000" && notify "Keyboard Backlight" "Off" "keyboard-brightness" -e
+            ;;
+        *)
+            set_color "FFFFFF" && notify "Keyboard Backlight" "High" "keyboard-brightness" -e
+            ;;
+    esac
+}
+
+# Puts the saved colour back on the keyboard. Retries quietly first: right
+# after a resume the OpenRGB server may need a moment.
+restore_color() {
+    local color attempt
+
+    color="$(read_color)"
+    for attempt in 1 2 3; do
+        apply_color "$color" && return 0
+        sleep 2
+    done
+
+    notify "Keyboard Backlight" "OpenRGB client failed. Is openrgb.service running?" "dialog-error"
+    return 1
+}
+
+# Re-applies the saved colour after every resume. Hibernation cuts power to
+# the USB lighting controller, which comes back in its own default colour
+# while the saved one - and so the Waybar module - still says otherwise.
+# Started from Hyprland's autostart; a new instance replaces the old one.
+watch_sleep() {
+    local old="" args=() fd line
+
+    if [[ -r $WATCH_PID_FILE ]]; then
+        read -r old < "$WATCH_PID_FILE" || true
+    fi
+    # Only if that pid still is a watcher, not a process that reused it.
+    if [[ -n $old && $old != "$$" ]] && mapfile -d '' args 2>/dev/null < "/proc/$old/cmdline" &&
+        [[ "${args[*]}" == *kbd_backlight.sh\ watch* ]]; then
+        pkill -P "$old" 2>/dev/null || true
+        kill "$old" 2>/dev/null || true
+    fi
+    printf '%s\n' "$$" > "$WATCH_PID_FILE"
+
+    while true; do
+        exec {fd}< <(exec gdbus monitor --system --dest org.freedesktop.login1 \
+            --object-path /org/freedesktop/login1 2>/dev/null)
+
+        while IFS= read -r line <&"$fd"; do
+            [[ $line == *"PrepareForSleep (false,)"* ]] || continue
+            sleep 2
+            with_lock restore_color || true
+        done
+
+        # The system bus went away; try again.
+        exec {fd}<&-
+        sleep 5
+    done
+}
+
 case "${1:-status}" in
     status)
         color="$(read_color)"
@@ -113,47 +206,31 @@ case "${1:-status}" in
         ;;
 
     off)
-        set_color "000000"
+        with_lock set_color "000000"
         ;;
 
     low)
-        set_color "${2:-808080}"
+        with_lock set_color "${2:-808080}"
         ;;
 
     high)
-        set_color "FFFFFF"
+        with_lock set_color "FFFFFF"
         ;;
 
     toggle|cycle)
-        color="$(read_color)"
-
-        case "$color" in
-            000000)
-                set_color "808080"
-                notify "Keyboard Backlight" "Low" "keyboard-brightness"
-                ;;
-            808080)
-                set_color "FFFFFF"
-                notify "Keyboard Backlight" "High" "keyboard-brightness"
-                ;;
-            FFFFFF)
-                set_color "000000"
-                notify "Keyboard Backlight" "Off" "keyboard-brightness"
-                ;;
-            *)
-                set_color "FFFFFF"
-                notify "Keyboard Backlight" "High" "keyboard-brightness"
-                ;;
-        esac
+        with_lock cycle_color
         ;;
 
     restore)
-        color="$(read_color)"
-        set_color "$color"
+        with_lock restore_color
+        ;;
+
+    watch)
+        watch_sleep
         ;;
 
     *)
-        printf 'Usage: %s [status|off|low [HEX_GRAY]|high|toggle|cycle|restore]\n' "${0##*/}" >&2
+        printf 'Usage: %s [status|off|low [HEX_GRAY]|high|toggle|cycle|restore|watch]\n' "${0##*/}" >&2
         exit 1
         ;;
 esac

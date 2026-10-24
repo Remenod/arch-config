@@ -5,9 +5,11 @@
 		// "exec-on-event":
 		// "hide-empty-text":
 		// "return-type":
-		"interval": 15,
+		// "interval":
 		// "restart-interval":
-		// "signal":
+		// The colour changes only through kbd_backlight.sh, which sends this
+		// signal after every change, so the module needs no polling.
+		"signal": 5,
 		"format": " {text}",
 		// "format-icons":
 		// "rotate":
