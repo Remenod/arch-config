@@ -26,7 +26,11 @@ hl.bind("ALT + left", hl.dsp.exec_cmd("wtype -m alt -k Home"))
 hl.bind("ALT + right", hl.dsp.exec_cmd("wtype -m alt -k End"))
 
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("~/.config/waybar/scripts/waybar-adaptive.sh reload"))
-hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("pkill mako; mako"))
+-- Reloading keeps the notifications; restarting swaync would drop them.
+hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("swaync-client --reload-config --reload-css --skip-wait"))
+hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("swaync-client --toggle-panel --skip-wait"))
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client --toggle-dnd --skip-wait"))
+hl.bind(mainMod .. " + CTRL + N",  hl.dsp.exec_cmd("~/.config/swaync/scripts/archive.sh open"))
 -- hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("pkill swaybg; swaybg -i " .. programs.wallpaper .. " -m fill"))
 
 hl.bind("CTRL + SHIFT + Escape", hl.dsp.exec_cmd("alacritty -e btm --battery --network_use_bytes --enable_cache_memory --hide-k-threads --show_table_scroll_position --tree --free_arc"))

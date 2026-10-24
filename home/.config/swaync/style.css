@@ -1,0 +1,174 @@
+/* Catppuccin Mocha, the monospace font and the 2px rounded frame of Waybar's
+   tooltips and the old mako popups. Only swaync's own variables and a few
+   rules are overridden; the layout comes from /etc/xdg/swaync/style.css. */
+
+@import url("file:///etc/xdg/swaync/style.css");
+
+:root {
+	--cc-bg: #11111b;
+	--noti-border-color: #a6adc8;
+	--noti-bg: 17, 17, 27;
+	--noti-bg-alpha: 1;
+	--noti-bg-darker: #181825;
+	--noti-bg-hover: #1e1e2e;
+	--noti-bg-focus: #313244;
+	--noti-close-bg: #313244;
+	--noti-close-bg-hover: #45475a;
+	--text-color: #cdd6f4;
+	--text-color-disabled: #6c7086;
+	--bg-selected: #b4befe;
+	--notification-icon-size: 32px;
+	--notification-group-icon-size: 20px;
+	--border: 2px solid var(--noti-border-color);
+	--border-radius: 10px;
+	--notification-shadow: none;
+	--font-size-body: 14px;
+	--font-size-summary: 14px;
+
+	--critical: #f38ba8;
+	--accent: #b4befe;
+	--button-border: 1px solid #45475a;
+	--button-radius: 6px;
+}
+
+* {
+	font-family: "Commit Mono Nerd Font";
+}
+
+.notification-row .notification-background {
+	padding: 4px 6px;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content {
+	padding: 2px 6px;
+}
+
+.notification-row .notification-background .notification.critical {
+	border-color: var(--critical);
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .text-box .time {
+	font-weight: normal;
+	color: var(--text-color-disabled);
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .image {
+	border-radius: var(--button-radius);
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content progressbar trough {
+	background: #313244;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content progressbar progress {
+	background: var(--text-color);
+}
+
+/* The default close button (24px, 8px from the top) is taller than a
+   one-line notification and spills over its bottom border. */
+.close-button {
+	min-width: 20px;
+	min-height: 20px;
+	margin-top: 5px;
+	margin-right: 5px;
+}
+
+/* Flat, thinly framed buttons everywhere instead of GTK's rounded pills. */
+.close-button,
+.notification-action > button,
+.inline-reply .inline-reply-button,
+.widget-title > button,
+.widget-buttons-grid flowboxchild > button {
+	background: var(--noti-bg-darker);
+	border: var(--button-border);
+	border-radius: var(--button-radius);
+	box-shadow: none;
+}
+
+.close-button:hover,
+.notification-action > button:hover,
+.inline-reply .inline-reply-button:hover,
+.widget-title > button:hover,
+.widget-buttons-grid flowboxchild > button:hover {
+	background: var(--noti-bg-hover);
+	border-color: var(--noti-border-color);
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .inline-reply .inline-reply-entry {
+	border: var(--button-border);
+	border-radius: var(--button-radius);
+}
+
+.control-center {
+	border: var(--border);
+}
+
+.control-center .control-center-list .notification {
+	box-shadow: none;
+}
+
+.widget {
+	margin: 4px 8px;
+	padding: 4px;
+}
+
+.widget-title > label {
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.widget-dnd label {
+	font-size: 14px;
+}
+
+.widget-dnd switch {
+	background: #313244;
+	border: var(--button-border);
+	border-radius: var(--button-radius);
+}
+
+.widget-dnd switch:checked {
+	background: var(--accent);
+}
+
+.widget-dnd switch slider {
+	background: var(--text-color);
+	border-radius: 4px;
+	box-shadow: none;
+}
+
+.notification-group .notification-group-headers {
+	color: var(--text-color-disabled);
+}
+
+/* Archive panel (scripts/archive-panel.py). It builds its rows from the
+   classes above; these cover the parts swaync itself does not have. */
+window.archive-panel,
+window.archive-blank {
+	background: transparent;
+}
+
+.archive .notification-row .notification-background .notification .notification-default-action .notification-content .text-box .time {
+	margin-right: 0;
+}
+
+.archive-search {
+	margin: 4px 14px;
+	min-height: 28px;
+	background: var(--noti-bg-darker);
+	color: var(--text-color);
+	border: var(--button-border);
+	border-radius: var(--button-radius);
+	box-shadow: none;
+	outline: none;
+}
+
+.archive-search:focus-within {
+	border-color: var(--noti-border-color);
+}
+
+.archive-day {
+	margin: 8px 14px 0;
+	font-size: 13px;
+	color: var(--text-color-disabled);
+}

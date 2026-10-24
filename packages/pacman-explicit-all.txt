@@ -81,6 +81,7 @@ sof-firmware
 sshfs
 steam
 stress
+swaync
 ttf-dejavu
 ttf-jetbrains-mono
 ttf-jetbrains-mono-nerd

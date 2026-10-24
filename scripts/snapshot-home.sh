@@ -19,6 +19,7 @@ paths=(
   ".config/shared"
   ".config/hypr"
   ".config/mako"
+  ".config/swaync"
   ".config/mpv"
   ".config/waybar"
   ".config/yay"
