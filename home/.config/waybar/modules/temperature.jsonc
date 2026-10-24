@@ -5,8 +5,9 @@
 	"custom/temperature": {
 		"exec": "~/.config/waybar/scripts/temperature.sh module",
 		"return-type": "json",
-		"interval": 2,
-		"signal": 3,
+		// A daemon with its own two-second tick; scrolling and the menu wake
+		// it through a fifo, so no "interval" or "signal".
+		"restart-interval": 5,
 		"format": "{}",
 		// "rotate":
 		"min-length": 8,

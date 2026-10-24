@@ -3,38 +3,74 @@
 # Temperature module with a selectable sensor.
 #
 # Modes:
-#   temperature.sh module   JSON for Waybar
+#   temperature.sh module   long-running daemon, one JSON line per tick (no "interval")
+#   temperature.sh once     print a single JSON line and exit (handy for debugging)
 #   temperature.sh next     select the next sensor
 #   temperature.sh prev     select the previous sensor
 #   temperature.sh menu     pick a sensor from an fzf popup
 #   temperature.sh list     print the detected sensors
 #
-# Sensors are rediscovered on every run, because hwmon numbering is not stable
-# across boots - they are matched by driver name and label instead.
+# Sensors are matched by driver name and label instead of hwmon number,
+# which is not stable across boots. The daemon rediscovers them every
+# RESCAN_EVERY ticks, and on the next tick when a sensor file disappears.
+#
+# Ahead of the sensors sits "auto": it follows whichever sensor is hottest at
+# the moment and shows that sensor's icon. It is also the fallback when
+# nothing is selected yet.
+#
+# A tick reads sysfs with builtins and forks nothing. Between ticks the daemon
+# waits on a fifo of its own; next, prev and menu write to every such fifo, so
+# a new choice shows at once rather than on the next tick.
 
 set -euo pipefail
 
 STATE_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/.temperature_sensor"
-SIGNAL=3
+RUNDIR="${XDG_RUNTIME_DIR:-/tmp}/waybar-temperature"
+INTERVAL=${INTERVAL:-2}            # seconds between ticks
+RESCAN_EVERY=${RESCAN_EVERY:-30}   # rediscover the sensors every N ticks
 WARN=${WARN:-80}
 CRIT=${CRIT:-90}
 
-ICON_CRIT=󰀦
+ICON_AUTO=󱃂
+ICON_NONE=󰔏
 
+# The sensors as parallel arrays, in display order. TEMPS holds the last
+# reading of each: whole degrees, or the bare word "off" or "?".
+declare -a KEYS=() ICONS=() LABELS=() PATHS=() TEMPS=() MENU=()
+HOT=-1          # index of the hottest sensor, -1 while none has a reading
+ACTIVE=auto     # the selected key ...
+ACTIVE_I=-1     # ... and its index, -1 for auto
+RESCAN=0        # set when a sensor file vanished
+TEMP=""
+TOOLTIP=""
+WAKE_FD=""
+
+# json_escape VAR VALUE sets VAR to VALUE escaped for a JSON string.
 json_escape() {
-    local value="$1"
-    value="${value//\\/\\\\}"
-    value="${value//\"/\\\"}"
-    value="${value//$'\n'/\\n}"
-    printf '%s' "$value"
+    local _value="$2"
+    _value="${_value//\\/\\\\}"
+    _value="${_value//\"/\\\"}"
+    _value="${_value//$'\n'/\\n}"
+    printf -v "$1" '%s' "$_value"
 }
 
+# pango_escape VAR VALUE sets VAR to VALUE escaped for Pango markup.
 pango_escape() {
-    local value="$1"
-    value="${value//&/&amp;}"
-    value="${value//</&lt;}"
-    value="${value//>/&gt;}"
-    printf '%s' "$value"
+    local _value="$2"
+    _value="${_value//&/&amp;}"
+    _value="${_value//</&lt;}"
+    _value="${_value//>/&gt;}"
+    printf -v "$1" '%s' "$_value"
+}
+
+# with_unit VAR READING UNIT sets VAR to "45 °C" for a reading, to the bare
+# word ("off", "?") otherwise.
+with_unit() {
+    if [[ $2 =~ ^-?[0-9]+$ ]]; then
+        printf -v "$1" '%s%s' "$2" "$3"
+    else
+        printf -v "$1" '%s' "$2"
+    fi
 }
 
 # rank|key|icon|label|path for one hwmon input, or nothing if it is not
@@ -84,145 +120,261 @@ scan_sensors() {
 
     for dir in /sys/class/hwmon/hwmon*; do
         [[ -r $dir/name ]] || continue
-        name="$(< "$dir/name")"
+        name=""
+        read -r name < "$dir/name" || true
+        [[ -n $name ]] || continue
 
         for file in "$dir"/temp*_input; do
             [[ -r $file ]] || continue
             base="${file%_input}"
             label=""
-            [[ -r ${base}_label ]] && label="$(< "${base}_label")"
+            [[ -r ${base}_label ]] && { read -r label < "${base}_label" || true; }
             classify "$name" "$label" "$file" "$dir"
         done
     done | sort -t'|' -k1,1n -k2,2 | cut -d'|' -f2-
 }
 
-# A powered-off device has no reading: amdgpu refuses temp*_input while the
-# dGPU sits in D3cold (and does not wake it for that), so say "off" instead
-# of "?".
-read_temp() {
-    local raw state="${1%/*}/device/power_state"
+# Fills KEYS, ICONS, LABELS and PATHS from scan_sensors.
+load_sensors() {
+    local key icon label path
 
-    [[ -r $state && $(< "$state") == D3cold ]] && { printf 'off'; return 1; }
-    [[ -r $1 ]] || { printf '?'; return 1; }
-    raw="$(< "$1")"
-    [[ $raw =~ ^-?[0-9]+$ ]] || { printf '?'; return 1; }
-
-    printf '%s' $(((raw + 500) / 1000))
-}
-
-# "45 °C" for a reading, the bare word ("off", "?") otherwise.
-with_unit() {
-    if [[ $1 =~ ^-?[0-9]+$ ]]; then
-        printf '%s%s' "$1" "$2"
-    else
-        printf '%s' "$1"
-    fi
-}
-
-selected_key() {
-    [[ -r $STATE_FILE ]] && head -n1 "$STATE_FILE" || true
-}
-
-# Echoes the currently selected line, falling back to the first sensor when
-# the stored key no longer exists (hardware or driver changed).
-current_line() {
-    local sensors="$1" want line
-
-    want="$(selected_key)"
-
-    if [[ -n $want ]]; then
-        while IFS= read -r line; do
-            [[ ${line%%|*} == "$want" ]] && { printf '%s' "$line"; return 0; }
-        done <<< "$sensors"
-    fi
-
-    head -n1 <<< "$sensors"
-}
-
-cycle() {
-    local step="$1" sensors keys count i want
-    sensors="$(scan_sensors)"
-    [[ -n $sensors ]] || return 0
-
-    mapfile -t keys < <(cut -d'|' -f1 <<< "$sensors")
-    count=${#keys[@]}
-    want="$(selected_key)"
-
-    for ((i = 0; i < count; i++)); do
-        [[ ${keys[i]} == "$want" ]] && break
-    done
-    ((i == count)) && i=0
-
-    i=$(((i + step + count) % count))
-    printf '%s\n' "${keys[i]}" > "$STATE_FILE"
-
-    pkill -RTMIN+$SIGNAL waybar 2> /dev/null || true
-}
-
-build_tooltip() {
-    local sensors="$1" active="$2" line key icon label path temp out=""
+    KEYS=() ICONS=() LABELS=() PATHS=()
 
     while IFS='|' read -r key icon label path; do
         [[ -n $key ]] || continue
-        temp="$(read_temp "$path" || true)"
-
-        if [[ $key == "$active" ]]; then
-            line="$(printf '%s  <b>%-12s %6s</b>' "$icon" "$(pango_escape "$label")" "$(with_unit "$temp" ' °C')")"
-        else
-            line="$(printf '%s  %-12s %6s' "$icon" "$(pango_escape "$label")" "$(with_unit "$temp" ' °C')")"
-        fi
-
-        out+="$line"$'\n'
-    done <<< "$sensors"
-
-    out+="<span alpha='55%'>scroll to switch · click to pick</span>"
-    printf '%s' "$out"
+        KEYS+=("$key")
+        ICONS+=("$icon")
+        LABELS+=("$label")
+        PATHS+=("$path")
+    done < <(scan_sensors)
 }
 
-module() {
-    local sensors line key icon label path temp class tooltip
+# Sets TEMP to the temp*_input at $1 in whole degrees. A powered-off device
+# has no reading: amdgpu refuses temp*_input while the dGPU sits in D3cold
+# (and does not wake it for that), so that reads "off" instead of "?".
+read_temp() {
+    local raw="" state="" state_file="${1%/*}/device/power_state"
 
-    sensors="$(scan_sensors)"
+    TEMP="?"
+    if [[ -r $state_file ]]; then
+        read -r state < "$state_file" || true
+        if [[ $state == D3cold ]]; then
+            TEMP="off"
+            return 0
+        fi
+    fi
 
-    if [[ -z $sensors ]]; then
-        printf '{"text":"%s n/a","tooltip":"No temperature sensors found","class":"missing"}\n' "$ICON_CRIT"
+    { read -r raw < "$1"; } 2> /dev/null || true
+    [[ $raw =~ ^-?[0-9]+$ ]] && TEMP=$(((raw + 500) / 1000))
+    return 0
+}
+
+# Reads every sensor into TEMPS and finds the hottest; on a tie the sensor
+# listed first wins.
+read_all() {
+    local i best=0
+
+    TEMPS=()
+    HOT=-1
+
+    for i in "${!PATHS[@]}"; do
+        [[ -e ${PATHS[i]} ]] || RESCAN=1
+        read_temp "${PATHS[i]}"
+        TEMPS[i]=$TEMP
+        [[ $TEMP =~ ^-?[0-9]+$ ]] || continue
+
+        if ((HOT < 0 || TEMP > best)); then
+            HOT=$i
+            best=$TEMP
+        fi
+    done
+}
+
+# Sets ACTIVE and ACTIVE_I to the selected sensor, falling back to "auto" when
+# nothing is stored or the stored sensor no longer exists (hardware or driver
+# changed).
+find_active() {
+    local want="" i
+
+    ACTIVE=auto
+    ACTIVE_I=-1
+    [[ -r $STATE_FILE ]] && { read -r want < "$STATE_FILE" || true; }
+
+    for i in "${!KEYS[@]}"; do
+        if [[ ${KEYS[i]} == "$want" ]]; then
+            ACTIVE="$want"
+            ACTIVE_I=$i
+            return 0
+        fi
+    done
+}
+
+# Appends a tooltip row to TOOLTIP: key, icon, label, reading. The selected
+# row is bold; while auto is selected, an arrow marks the sensor it follows.
+tooltip_row() {
+    local shown name row
+
+    with_unit shown "$4" ' °C'
+    pango_escape name "$3"
+
+    if [[ $1 == "$ACTIVE" ]]; then
+        printf -v row '%s  <b>%-12s %6s</b>' "$2" "$name" "$shown"
+    else
+        printf -v row '%s  %-12s %6s' "$2" "$name" "$shown"
+    fi
+    [[ $ACTIVE == auto ]] && ((HOT >= 0)) && [[ $1 == "${KEYS[HOT]}" ]] && row+=" ←"
+
+    TOOLTIP+="$row"$'\n'
+}
+
+emit() {
+    local i icon temp shown class="" auto_temp="?" tooltip_json
+
+    if ((${#KEYS[@]} == 0)); then
+        printf '{"text":"%s n/a","tooltip":"No temperature sensors found","class":"missing"}\n' "$ICON_NONE"
         return 0
     fi
 
-    line="$(current_line "$sensors")"
-    IFS='|' read -r key icon label path <<< "$line"
-    temp="$(read_temp "$path" || true)"
+    # Auto shows the hottest sensor as if it were the selected one.
+    i=$ACTIVE_I
+    [[ $ACTIVE == auto ]] && i=$HOT
 
-    class=""
+    if ((i >= 0)); then
+        icon="${ICONS[i]}"
+        temp="${TEMPS[i]}"
+    else
+        icon="$ICON_AUTO"
+        temp="?"
+    fi
+
     if [[ $temp =~ ^[0-9]+$ ]]; then
         if ((temp >= CRIT)); then
             class="critical"
-            icon="$ICON_CRIT"
         elif ((temp >= WARN)); then
             class="warning"
         fi
     fi
 
-    tooltip="$(build_tooltip "$sensors" "$key")"
+    ((HOT >= 0)) && auto_temp="${TEMPS[HOT]}"
+    TOOLTIP=""
+    tooltip_row auto "$ICON_AUTO" Auto "$auto_temp"
+    for i in "${!KEYS[@]}"; do
+        tooltip_row "${KEYS[i]}" "${ICONS[i]}" "${LABELS[i]}" "${TEMPS[i]}"
+    done
+    TOOLTIP+="<span alpha='55%'>scroll to switch · click to pick</span>"
 
+    with_unit shown "$temp" '°C'
+    json_escape tooltip_json "$TOOLTIP"
     printf '{"text":"%s %s","tooltip":"%s","class":"%s"}\n' \
-        "$icon" "$(with_unit "$temp" '°C')" "$(json_escape "$tooltip")" "$class"
+        "$icon" "$shown" "$tooltip_json" "$class"
+}
+
+# The fifo next, prev and menu poke. Held open read-write, so the timed read
+# on it waits out the whole interval without a sleep child.
+open_wake() {
+    local fifo="$RUNDIR/wake.$$"
+
+    mkdir -p "$RUNDIR"
+    rm -f "$fifo"
+    mkfifo "$fifo" 2> /dev/null || return 1
+    exec {WAKE_FD}<> "$fifo"
+}
+
+naptime() {
+    if [[ -n $WAKE_FD ]]; then
+        read -r -t "$INTERVAL" -u "$WAKE_FD" _ || true
+    else
+        sleep "$INTERVAL"
+    fi
+}
+
+# Pokes every running daemon. Opening a fifo read-write never blocks, so one
+# left behind by a daemon that died without cleaning up cannot hang this;
+# such fifos are removed.
+wake() {
+    local fifo
+
+    for fifo in "$RUNDIR"/wake.*; do
+        [[ -p $fifo ]] || continue
+        if kill -0 "${fifo##*.}" 2> /dev/null; then
+            printf '\n' 1<> "$fifo" || true
+        else
+            rm -f "$fifo"
+        fi
+    done
+}
+
+module() {
+    local tick=0
+
+    trap 'rm -f "$RUNDIR/wake.$$"' EXIT
+    # Exiting from the handler rather than falling through it stops the shell
+    # from announcing the interrupted read on Waybar's stderr at shutdown.
+    trap 'exit 0' INT TERM HUP
+    open_wake || true
+
+    while true; do
+        if ((tick % RESCAN_EVERY == 0 || RESCAN)); then
+            load_sensors
+            RESCAN=0
+        fi
+
+        read_all
+        find_active
+        emit
+        tick=$((tick + 1))
+        naptime
+    done
+}
+
+once() {
+    load_sensors
+    read_all
+    find_active
+    emit
+}
+
+cycle() {
+    local step="$1" keys count i
+
+    load_sensors
+    ((${#KEYS[@]} > 0)) || return 0
+    find_active
+
+    # Auto sits in front, and ACTIVE_I is -1 for it.
+    keys=(auto "${KEYS[@]}")
+    count=${#keys[@]}
+    i=$(((ACTIVE_I + 1 + step + count) % count))
+
+    printf '%s\n' "${keys[i]}" > "$STATE_FILE"
+    wake
+}
+
+# Appends an fzf line to MENU: the key, a tab, then what is shown.
+menu_row() {
+    local prefix="  " shown row
+
+    [[ $1 == "$ACTIVE" ]] && prefix="* "
+    with_unit shown "$4" ' °C'
+    printf -v row '%s\t%s  %s%-12s %6s' "$1" "$2" "$prefix" "$3" "$shown"
+    MENU+=("$row")
 }
 
 menu() {
-    local sensors list=() key icon label path temp active selected
+    local i auto_temp="?" selected
 
-    sensors="$(scan_sensors)"
-    active="$(cut -d'|' -f1 <<< "$(current_line "$sensors")")"
+    load_sensors
+    read_all
+    find_active
 
-    while IFS='|' read -r key icon label path; do
-        [[ -n $key ]] || continue
-        temp="$(read_temp "$path" || true)"
-        [[ $key == "$active" ]] && prefix="* " || prefix="  "
-        list+=("$key"$'\t'"$icon  $prefix$(printf '%-12s %6s' "$label" "$(with_unit "$temp" ' °C')")")
-    done <<< "$sensors"
+    MENU=()
+    ((HOT >= 0)) && auto_temp="${TEMPS[HOT]}"
+    menu_row auto "$ICON_AUTO" Auto "$auto_temp"
+    for i in "${!KEYS[@]}"; do
+        menu_row "${KEYS[i]}" "${ICONS[i]}" "${LABELS[i]}" "${TEMPS[i]}"
+    done
 
-    selected="$(printf '%s\n' "${list[@]}" | fzf \
+    selected="$(printf '%s\n' "${MENU[@]}" | fzf \
         --border=sharp \
         --border-label=' Temperature Sensor ' \
         --height=~100% \
@@ -234,17 +386,18 @@ menu() {
         --with-nth=2..)" || exit 0
 
     printf '%s\n' "${selected%%$'\t'*}" > "$STATE_FILE"
-    pkill -RTMIN+$SIGNAL waybar 2> /dev/null || true
+    wake
 }
 
 case "${1:-module}" in
     module) module ;;
+    once) once ;;
     next) cycle 1 ;;
     prev) cycle -1 ;;
     menu) menu ;;
     list) scan_sensors ;;
     *)
-        printf 'Usage: %s {module|next|prev|menu|list}\n' "${0##*/}" >&2
+        printf 'Usage: %s {module|once|next|prev|menu|list}\n' "${0##*/}" >&2
         exit 2
         ;;
 esac
