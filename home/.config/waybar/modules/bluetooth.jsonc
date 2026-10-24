@@ -17,19 +17,19 @@
 		// "justify":
 		"on-click": "alacritty --class alacritty-connect-menu -e ~/.config/waybar/scripts/bluetooth.sh",
 		// "on-click-middle":
-		"on-click-right": "bluetoothctl power off && notify-send 'Bluetooth Off' -i 'network-bluetooth-inactive' -h string:x-canonical-private-synchronous:bluetooth",
+		"on-click-right": "~/.config/waybar/scripts/bluetooth.sh toggle",
 		// "on-scroll-up":
 		// "on-scroll-down":
 		// "smooth-scrolling-threshold":
 		// "tooltip":
-		"tooltip-format": "Device Addr: {device_address}",
-		"tooltip-format-disabled": "Bluetooth Disabled",
-		"tooltip-format-off": "Bluetooth Off",
-		"tooltip-format-on": "Bluetooth Disconnected",
-		"tooltip-format-connected": "Device: {device_alias}",
-		"tooltip-format-enumerate-connected": "Device: {device_alias}",
-		"tooltip-format-connected-battery": "Device: {device_alias}\nBattery: {device_battery_percentage}%",
-		"tooltip-format-enumerate-connected-battery": "Device: {device_alias}\nBattery: {device_battery_percentage}%"
+		"tooltip-format": "Device Addr: {device_address}\n<span alpha='55%'>click: devices · right-click: Bluetooth on/off</span>",
+		"tooltip-format-disabled": "Bluetooth Disabled\n<span alpha='55%'>click: devices · right-click: Bluetooth on/off</span>",
+		"tooltip-format-off": "Bluetooth Off\n<span alpha='55%'>click: devices · right-click: Bluetooth on/off</span>",
+		"tooltip-format-on": "No device connected\n<span alpha='55%'>click: devices · right-click: Bluetooth on/off</span>",
+		// Every connected device, with battery where the device reports it.
+		"tooltip-format-connected": "{device_enumerate}\n<span alpha='55%'>click: devices · right-click: Bluetooth on/off</span>",
+		"tooltip-format-enumerate-connected": "{device_alias}",
+		"tooltip-format-enumerate-connected-battery": "{device_alias}  {device_battery_percentage}%"
 		// "menu":
 		// "menu-file":
 		// "menu-actions":

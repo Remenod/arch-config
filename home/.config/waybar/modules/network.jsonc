@@ -21,17 +21,17 @@
 		// "justify":
 		"on-click": "alacritty --class alacritty-connect-menu -e ~/.config/waybar/scripts/network.sh",
 		// "on-click-middle":
-		"on-click-right": "nmcli radio wifi off && notify-send 'Wi-Fi Disabled' -i 'network-wireless-off' -h string:x-canonical-private-synchronous:network",
+		"on-click-right": "~/.config/waybar/scripts/network.sh toggle",
 		// "on-update":
 		// "on-scroll-up":
 		// "on-scroll-down":
 		// "smooth-scrolling-threshold":
 		// "tooltip":
-		"tooltip-format": "<b>Gateway</b>: {gwaddr}",
-		"tooltip-format-ethernet": "<b>Interface</b>: {ifname}",
-		"tooltip-format-wifi": "<b>Network</b>: {essid}\n<b>IP Addr</b>: {ipaddr}/{cidr}\n<b>Strength</b>: {signalStrength}%\n<b>Frequency</b>: {frequency} GHz",
-		"tooltip-format-disconnected": "Wi-Fi Disconnected",
-		"tooltip-format-disabled": "Wi-Fi Disabled"
+		"tooltip-format": "<b>Gateway</b>: {gwaddr}\n<span alpha='55%'>click: networks · right-click: Wi-Fi on/off</span>",
+		"tooltip-format-ethernet": "<b>Interface</b>: {ifname}\n<span alpha='55%'>click: networks · right-click: Wi-Fi on/off</span>",
+		"tooltip-format-wifi": "<b>Network</b>: {essid}\n<b>IP Addr</b>: {ipaddr}/{cidr}\n<b>Strength</b>: {signalStrength}%\n<b>Frequency</b>: {frequency} GHz\n<span alpha='55%'>click: networks · right-click: Wi-Fi on/off</span>",
+		"tooltip-format-disconnected": "Wi-Fi Disconnected\n<span alpha='55%'>click: networks · right-click: Wi-Fi on/off</span>",
+		"tooltip-format-disabled": "Wi-Fi Disabled\n<span alpha='55%'>click: networks · right-click: Wi-Fi on/off</span>"
 		// "menu":
 		// "menu-file":
 		// "menu-actions":
