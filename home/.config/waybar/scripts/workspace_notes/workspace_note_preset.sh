@@ -41,7 +41,7 @@ select_preset() {
     SELECTION=$(fzf "${options[@]}" <<< "$formatted_list")
 
     if [[ -z $SELECTION ]]; then
-        notify-send "Workspace Notes" "No preset selected" -i "dialog-error"
+        notify-send -e "Workspace Notes" "No preset selected" -i "dialog-error"
         exit 1
     fi
 
@@ -64,14 +64,14 @@ create_preset() {
     read -r -p "> " NEW_NAME
 
     if [[ -z "$NEW_NAME" ]]; then
-        notify-send "Workspace Notes" "Creation cancelled" -i "dialog-error"
+        notify-send -e "Workspace Notes" "Creation cancelled" -i "dialog-error"
         exit 1
     fi
 
     echo "{}" > "$PRESETS_DIR/$NEW_NAME.json"
 
     PROFILE="$NEW_NAME"
-    notify-send "Workspace Notes" "Created new preset: $PROFILE"
+    notify-send -e "Workspace Notes" "Created new preset: $PROFILE"
 }
 
 rename_preset() {
@@ -88,7 +88,7 @@ rename_preset() {
     local target=$(fzf "${options[@]}" <<< "$LIST")
 
     if [[ -z "$target" ]]; then
-        notify-send "Workspace Notes" "Rename cancelled" -i "dialog-error"
+        notify-send -e "Workspace Notes" "Rename cancelled" -i "dialog-error"
         exit 1
     fi
 
@@ -97,13 +97,13 @@ rename_preset() {
     read -r -p "> " NEW_NAME
 
     if [[ -z "$NEW_NAME" ]]; then
-        notify-send "Workspace Notes" "Rename cancelled" -i "dialog-error"
+        notify-send -e "Workspace Notes" "Rename cancelled" -i "dialog-error"
         exit 1
     fi
 
     mv "$PRESETS_DIR/$target.json" "$PRESETS_DIR/$NEW_NAME.json"
     PROFILE="$NEW_NAME"
-    notify-send "Workspace Notes" "Renamed preset to: $PROFILE"
+    notify-send -e "Workspace Notes" "Renamed preset to: $PROFILE"
 }
 
 delete_preset() {
@@ -121,12 +121,12 @@ delete_preset() {
     local target=$(fzf "${options[@]}" <<< "$LIST")
 
     if [[ -z "$target" ]]; then
-        notify-send "Workspace Notes" "Deletion cancelled" -i "dialog-error"
+        notify-send -e "Workspace Notes" "Deletion cancelled" -i "dialog-error"
         exit 1
     fi
 
     rm "$PRESETS_DIR/$target.json"
-    notify-send "Workspace Notes" "Deleted preset: $target"
+    notify-send -e "Workspace Notes" "Deleted preset: $target"
     exit 0
 }
 
@@ -139,7 +139,7 @@ switch_preset() {
 
         pkill -f "workspace_note.sh"
 
-        notify-send "Workspace Notes" "Activated preset: $PROFILE" -i "dialog-ok"
+        notify-send -e "Workspace Notes" "Activated preset: $PROFILE" -i "dialog-ok"
     else
         notify-send "Workspace Notes" "Failed to switch preset" -i "dialog-error"
         exit 1

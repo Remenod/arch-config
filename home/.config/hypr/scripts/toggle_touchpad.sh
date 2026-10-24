@@ -24,9 +24,9 @@ STATE="$(cat "$STATE_FILE")"
 if [ "$STATE" = "1" ]; then
     hyprctl eval "hl.device({ name = \"$DEVICE\", enabled = false })" >/dev/null
     echo 0 > "$STATE_FILE"
-    notify "Touchpad" "disabled"
+    notify -e "Touchpad" "disabled"
 else
     hyprctl eval "hl.device({ name = \"$DEVICE\", enabled = true })" >/dev/null
     echo 1 > "$STATE_FILE"
-    notify "Touchpad" "enabled"
+    notify -e "Touchpad" "enabled"
 fi

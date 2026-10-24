@@ -118,7 +118,7 @@ toggle_camera() {
 	esac
 
 	write_value "$WEBCAM_FILE" "$next"
-	notify-send "Camera" "$(camera_state "$next")" -i camera-web \
+	notify-send -e "Camera" "$(camera_state "$next")" -i camera-web \
 		-h string:x-canonical-private-synchronous:camera
 }
 
@@ -138,7 +138,7 @@ toggle_block() {
 	esac
 
 	write_value "$BLOCK_FILE" "$next"
-	notify-send "Camera lock" "$next" -i camera-web \
+	notify-send -e "Camera lock" "$next" -i camera-web \
 		-h string:x-canonical-private-synchronous:camera
 }
 

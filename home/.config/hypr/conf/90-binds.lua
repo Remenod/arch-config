@@ -115,8 +115,8 @@ hl.bind("XF86AudioMute", hl.dsp.exec_cmd("~/.config/shared/scripts/volume.sh out
 -- hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, repeating = true })
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("~/.config/shared/scripts/volume.sh input mute"), { locked = true })
 
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd([[sh -c 'brightnessctl -e2 -n2 set 5%+ && level=$(brightnessctl -m | awk -F "," "{print \$4}") && notify-send "Brightness: $level" -h int:value:$level -i contrast -h string:x-canonical-private-synchronous:backlight']]), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd([[sh -c 'brightnessctl -e2 -n2 set 5%- && level=$(brightnessctl -m | awk -F "," "{print \$4}") && notify-send "Brightness: $level" -h int:value:$level -i contrast -h string:x-canonical-private-synchronous:backlight']]), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd([[sh -c 'brightnessctl -e2 -n2 set 5%+ && level=$(brightnessctl -m | awk -F "," "{print \$4}") && notify-send -e "Brightness: $level" -h int:value:$level -i contrast -h string:x-canonical-private-synchronous:backlight']]), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd([[sh -c 'brightnessctl -e2 -n2 set 5%- && level=$(brightnessctl -m | awk -F "," "{print \$4}") && notify-send -e "Brightness: $level" -h int:value:$level -i contrast -h string:x-canonical-private-synchronous:backlight']]), { locked = true, repeating = true })
 
 -- Requires playerctl
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })

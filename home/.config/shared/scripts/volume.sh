@@ -132,7 +132,7 @@ set_state() {
 	icon=$(get_icon)
 	sync_led
 
-	notify-send "$DEV_NAME: $state" -i "$icon" \
+	notify-send -e "$DEV_NAME: $state" -i "$icon" \
 		-h string:x-canonical-private-synchronous:volume
 }
 
@@ -163,7 +163,7 @@ set_volume() {
 	icon=$(get_icon $new_level)
 	sync_led
 
-	notify-send "$DEV_NAME: $new_level%" -h int:value:$new_level -i "$icon" \
+	notify-send -e "$DEV_NAME: $new_level%" -h int:value:$new_level -i "$icon" \
 		-h string:x-canonical-private-synchronous:volume
 }
 

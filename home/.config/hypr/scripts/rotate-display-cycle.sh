@@ -2,7 +2,7 @@
 set -euo pipefail
 
 notify() {
-    notify-send "$1" "$2" -i video-display \
+    notify-send "$1" "$2" -i video-display "${@:3}" \
         -h string:x-canonical-private-synchronous:rotate-display 2>/dev/null || true
 }
 
@@ -41,7 +41,7 @@ esac
 # scale = залишаємо поточний scale
 hyprctl eval "hl.monitor({ output = \"$name\", mode = \"preferred\", position = \"${x}x${y}\", scale = $scale, transform = $next })" >/dev/null
 
-notify "Display rotation" "$name: $label"
+notify "Display rotation" "$name: $label" -e
 
 if [[ -x "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/waybar-adaptive.sh" ]]; then
     sleep 0.2

@@ -109,21 +109,21 @@ case "$kind" in
             pause_on_error "Power Profiles" "Failed to switch to $value"
             exit 1
         fi
-        notify-send "Power Profiles" "Power profile: $value" -i "dialog-ok" 2>/dev/null || true
+        notify-send -e "Power Profiles" "Power profile: $value" -i "dialog-ok" 2>/dev/null || true
         ;;
     shift)
         if ! msi_ec_main set-profile "$value"; then
             pause_on_error "MSI EC" "Failed to set MSI shift to $value"
             exit 1
         fi
-        notify-send "MSI EC" "MSI shift: $value" -i "dialog-ok" 2>/dev/null || true
+        notify-send -e "MSI EC" "MSI shift: $value" -i "dialog-ok" 2>/dev/null || true
         ;;
     dgpu)
         if ! dgpu_set_mode "$value"; then
             pause_on_error "dGPU" "Failed to set dGPU mode to $value"
             exit 1
         fi
-        notify-send "dGPU" "dGPU: $value" -i "dialog-ok" 2>/dev/null || true
+        notify-send -e "dGPU" "dGPU: $value" -i "dialog-ok" 2>/dev/null || true
         ;;
     *)
         exit 0

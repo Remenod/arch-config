@@ -6,7 +6,7 @@ shared_dir="${XDG_CONFIG_HOME:-$HOME/.config}/shared/scripts"
 source "$shared_dir/msi-ec.sh"
 
 notify() {
-    notify-send "$1" "$2" -i "$3" \
+    notify-send "$1" "$2" -i "$3" "${@:4}" \
         -h string:x-canonical-private-synchronous:msi-shift 2>/dev/null || true
 }
 
@@ -67,4 +67,4 @@ if ! msi_ec_main set-profile "$next"; then
     exit 1
 fi
 
-notify "MSI EC" "$(icon_for "$next")  MSI shift: $(label_for "$next")" "dialog-ok"
+notify "MSI EC" "$(icon_for "$next")  MSI shift: $(label_for "$next")" "dialog-ok" -e

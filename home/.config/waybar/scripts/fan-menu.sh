@@ -75,11 +75,11 @@ value="${action#*:}"
 case "$kind" in
     fan)
         write_or_pause fan_mode "$value"
-        notify-send "MSI EC" "Fan mode: $value" -i "dialog-ok" 2>/dev/null || true
+        notify-send -e "MSI EC" "Fan mode: $value" -i "dialog-ok" 2>/dev/null || true
         ;;
     boost)
         write_or_pause cooler_boost "$value"
-        notify-send "MSI EC" "Cooler Boost: $value" -i "dialog-ok" 2>/dev/null || true
+        notify-send -e "MSI EC" "Cooler Boost: $value" -i "dialog-ok" 2>/dev/null || true
         ;;
     *)
         exit 0
