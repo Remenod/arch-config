@@ -2,8 +2,8 @@
     "custom/fan": {
 	"exec": "~/.config/waybar/scripts/fan.sh",
 	"return-type": "json",
-	"interval": 2,
-	"signal": 4,
+	// A daemon paced by isw, see the script; no "interval" or "signal".
+	"restart-interval": 5,
         "format": "{text}",
         "min-length": 8,
         "max-length": 8,

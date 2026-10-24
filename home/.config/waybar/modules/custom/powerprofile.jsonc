@@ -2,7 +2,10 @@
     "custom/powerprofile": {
         "exec": "~/.config/waybar/scripts/powerprofile-get.sh",
         "return-type": "json",
+        // Changes made through msi-ec.sh redraw it at once with this signal;
+        // the interval only catches profile changes from elsewhere.
         "interval": 15,
+        "signal": 6,
         "format": "{text}",
         "min-length": 3,
         "max-length": 3,

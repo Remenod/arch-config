@@ -16,7 +16,7 @@ Most of these can probably become `$HOME`, `~`, or repo-relative helper paths.
 ## Host And Hardware Specific Items
 
 - `home/.config/hypr/conf.d/10-monitors.conf` hardcodes monitor outputs, refresh rates, positions, transforms, and EDID descriptors.
-- `home/.config/shared/scripts/msi-ec.sh` uses MSI EC sysfs attributes under `/sys/devices/platform/msi-ec`; this is intentionally MSI-specific. Fan RPM reading still uses `isw -r E15CKAMS`, while mode writes use `msi-ec`. Power profiles still use `powerprofilesctl`.
+- `home/.config/shared/scripts/msi-ec.sh` uses MSI EC sysfs attributes under `/sys/devices/platform/msi-ec`; this is intentionally MSI-specific. Fan RPM reading still uses `isw -r E15CKAMS` (the Waybar fan module keeps one instance running under `sudo -n`, so it needs a NOPASSWD rule for `/usr/bin/isw`), while mode writes use `msi-ec`. Power profiles are read over D-Bus with `busctl` and set with `powerprofilesctl`.
 - `system/etc/tmpfiles.d/msi-ec-mute-leds.conf` grants the `wheel` group write access to selected MSI EC controls for mute LEDs, webcam controls, shift mode, fan mode, and Cooler Boost.
 - `home/.config/shared/scripts/volume.sh` controls MSI mute LEDs through `/sys/devices/platform/msi-ec/leds/platform::mute` and `platform::micmute`.
 - `home/.config/shared/scripts/camera.sh` toggles the MSI EC webcam controls at `/sys/devices/platform/msi-ec/webcam` and `webcam_block`.

@@ -29,6 +29,19 @@ msi_ec_read() {
     sed -n '1{s/\r$//;p;q}' "$file"
 }
 
+# msi_ec_get VAR REL [FALLBACK]: msi_ec_read into VAR instead of stdout, with
+# builtins only - for callers that run every few seconds.
+msi_ec_get() {
+    local _file="$MSI_EC_BASE/$2" _line=""
+
+    if [[ -r $_file ]] && { IFS= read -r _line < "$_file" || [[ -n $_line ]]; } 2> /dev/null; then
+        printf -v "$1" '%s' "${_line%$'\r'}"
+    else
+        printf -v "$1" '%s' "${3-unknown}"
+        return 1
+    fi
+}
+
 msi_ec_read_words() {
     local rel="$1"
     local fallback="${2:-}"
@@ -108,20 +121,31 @@ msi_ec_contains_word() {
     return 1
 }
 
+# msi_ec_json_escape VAR VALUE sets VAR to VALUE escaped for a JSON string.
 msi_ec_json_escape() {
-    local value="$1"
-    value="${value//\\/\\\\}"
-    value="${value//\"/\\\"}"
-    value="${value//$'\n'/\\n}"
-    printf '%s' "$value"
+    local _value="$2"
+    _value="${_value//\\/\\\\}"
+    _value="${_value//\"/\\\"}"
+    _value="${_value//$'\n'/\\n}"
+    printf -v "$1" '%s' "$_value"
 }
 
 powerprofiles_available() {
     command -v powerprofilesctl >/dev/null 2>&1
 }
 
+# Asks power-profiles-daemon over D-Bus: busctl answers in a few
+# milliseconds, while powerprofilesctl is a Python program that takes ~100 ms
+# to start - and the Waybar module asks every 15 seconds.
 powerprofiles_current() {
-    if powerprofiles_available; then
+    local reply
+
+    if reply="$(busctl --system get-property org.freedesktop.UPower.PowerProfiles \
+        /org/freedesktop/UPower/PowerProfiles org.freedesktop.UPower.PowerProfiles \
+        ActiveProfile 2> /dev/null)" && [[ $reply == 's "'*'"' ]]; then
+        reply="${reply#s \"}"
+        printf '%s\n' "${reply%\"}"
+    elif powerprofiles_available; then
         powerprofilesctl get 2>/dev/null || printf 'unknown\n'
     else
         printf 'unknown\n'
@@ -161,40 +185,39 @@ powerprofiles_set() {
         notify-send "Power Profiles" "Failed to switch to $profile" -i "dialog-error" 2>/dev/null || true
         return 1
     fi
+
+    msi_ec_refresh_profile_module
+}
+
+# The Waybar power profile module polls only every 15 seconds; this has it
+# redraw right after a change made from here.
+msi_ec_refresh_profile_module() {
+    pkill -x -RTMIN+6 waybar 2>/dev/null || true
 }
 
 msi_ec_is_int() {
     [[ "$1" =~ ^[0-9]+$ ]]
 }
 
-msi_ec_display_speed() {
-    local value="$1"
-
-    if msi_ec_is_int "$value" && (( value > 0 )); then
-        printf '%s\n' "$value"
-    else
-        printf '0\n'
-    fi
-}
-
+# msi_ec_fan_speed_label VAR RPM [PERCENT] sets VAR to e.g. "2400 RPM (35%)".
 msi_ec_fan_speed_label() {
-    local value="$1"
-    local percent="${2:-}"
+    local _value="$2"
+    local _percent="${3:-}"
+    local _label
 
-    if ! msi_ec_is_int "$value"; then
-        printf '%s' "$value"
-        return
-    fi
-
-    if (( value == 0 )); then
-        printf 'idle'
+    if ! msi_ec_is_int "$_value"; then
+        _label="$_value"
+    elif (( _value == 0 )); then
+        _label="idle"
     else
-        printf '%s RPM' "$value"
+        _label="$_value RPM"
     fi
 
-    if msi_ec_is_int "$percent"; then
-        printf ' (%s%%)' "$percent"
+    if msi_ec_is_int "$_percent"; then
+        _label+=" ($_percent%)"
     fi
+
+    printf -v "$1" '%s' "$_label"
 }
 
 isw_fan_rpms() {
@@ -221,20 +244,23 @@ isw_fan_rpms() {
     printf '%s %s\n' "$cpu_rpm" "$gpu_rpm"
 }
 
+# msi_ec_fan_icon VAR FAN_MODE ACTIVE_FANS
 msi_ec_fan_icon() {
-    local cooler="$1"
-    local fan_mode="$2"
-    local active_fans="$3"
+    local _fan_mode="$2"
+    local _active_fans="$3"
+    local _icon
 
-    if [[ "$fan_mode" == "silent" && "$active_fans" -eq 0 ]]; then
-        printf '󰠝'
-    elif [[ "$active_fans" -ge 2 ]]; then
-        printf '󱑳'
-    elif [[ "$active_fans" -eq 1 ]]; then
-        printf '󱑲'
+    if [[ "$_fan_mode" == "silent" && "$_active_fans" -eq 0 ]]; then
+        _icon='󰠝'
+    elif [[ "$_active_fans" -ge 2 ]]; then
+        _icon='󱑳'
+    elif [[ "$_active_fans" -eq 1 ]]; then
+        _icon='󱑲'
     else
-        printf '󰠝'
+        _icon='󰠝'
     fi
+
+    printf -v "$1" '%s' "$_icon"
 }
 
 msi_ec_profile_icon() {
@@ -271,46 +297,54 @@ powerprofiles_icon() {
     esac
 }
 
+# A single reading, for "msi-ec.sh fan-json": runs isw once, which takes
+# ~0.8 s. The Waybar module keeps one isw running instead and calls
+# msi_ec_fan_render itself, see ~/.config/waybar/scripts/fan.sh.
 msi_ec_fan_json() {
+    local rpm_pair cpu_rpm=0 gpu_rpm=0 rpm_note="isw unavailable"
+
+    if msi_ec_available && rpm_pair="$(isw_fan_rpms)"; then
+        read -r cpu_rpm gpu_rpm <<< "$rpm_pair"
+        rpm_note="isw"
+    fi
+
+    msi_ec_fan_render "$cpu_rpm" "$gpu_rpm" "$rpm_note"
+}
+
+# The fan module's JSON line for the given RPMs. $3 says where they came
+# from; anything but "isw" is noted in the tooltip. Forks nothing, as the
+# fan module calls this every two seconds.
+msi_ec_fan_render() {
     if ! msi_ec_available; then
         printf '{"text":"󰠝 n/a","tooltip":"msi-ec is not available","class":"missing"}\n'
         return 0
     fi
 
-    local cpu_rpm gpu_rpm cpu_display gpu_display cpu_pct gpu_pct fan_mode cooler active_fans total_rpm display_rpm icon tooltip class rpm_pair rpm_note
+    local cpu_rpm="$1" gpu_rpm="$2" rpm_note="$3"
+    local cpu_pct gpu_pct fan_mode cooler active_fans total_rpm display_rpm icon tooltip class
+    local cpu_label gpu_label tooltip_json class_json
 
     # Temperatures deliberately stay out of here - that is the temperature
     # module's job, see ~/.config/waybar/scripts/temperature.sh.
-    cpu_pct="$(msi_ec_read cpu/realtime_fan_speed '' || true)"
-    gpu_pct="$(msi_ec_read gpu/realtime_fan_speed '' || true)"
-    fan_mode="$(msi_ec_read fan_mode unknown || true)"
-    cooler="$(msi_ec_read cooler_boost unknown || true)"
-
-    if rpm_pair="$(isw_fan_rpms)"; then
-        read -r cpu_rpm gpu_rpm <<< "$rpm_pair"
-        rpm_note="isw"
-    else
-        cpu_rpm=0
-        gpu_rpm=0
-        rpm_note="isw unavailable"
-    fi
+    msi_ec_get cpu_pct cpu/realtime_fan_speed '' || true
+    msi_ec_get gpu_pct gpu/realtime_fan_speed '' || true
+    msi_ec_get fan_mode fan_mode unknown || true
+    msi_ec_get cooler cooler_boost unknown || true
 
     msi_ec_is_int "$cpu_rpm" || cpu_rpm=0
     msi_ec_is_int "$gpu_rpm" || gpu_rpm=0
-    cpu_display="$(msi_ec_display_speed "$cpu_rpm")"
-    gpu_display="$(msi_ec_display_speed "$gpu_rpm")"
 
     active_fans=0
     total_rpm=0
 
-    if (( cpu_display > 0 )); then
+    if (( cpu_rpm > 0 )); then
         active_fans=$((active_fans + 1))
-        total_rpm=$((total_rpm + cpu_display))
+        total_rpm=$((total_rpm + cpu_rpm))
     fi
 
-    if (( gpu_display > 0 )); then
+    if (( gpu_rpm > 0 )); then
         active_fans=$((active_fans + 1))
-        total_rpm=$((total_rpm + gpu_display))
+        total_rpm=$((total_rpm + gpu_rpm))
     fi
 
     if (( active_fans > 1 )); then
@@ -319,12 +353,14 @@ msi_ec_fan_json() {
         display_rpm="$total_rpm"
     fi
 
-    icon="$(msi_ec_fan_icon "$cooler" "$fan_mode" "$active_fans")"
+    msi_ec_fan_icon icon "$fan_mode" "$active_fans"
+    msi_ec_fan_speed_label cpu_label "$cpu_rpm" "$cpu_pct"
+    msi_ec_fan_speed_label gpu_label "$gpu_rpm" "$gpu_pct"
     printf -v tooltip '<b>Fan mode</b>  %s\n<b>Cooler Boost</b>  %s\nCPU fan  %s\nGPU fan  %s' \
         "$fan_mode" \
         "$cooler" \
-        "$(msi_ec_fan_speed_label "$cpu_rpm" "$cpu_pct")" \
-        "$(msi_ec_fan_speed_label "$gpu_rpm" "$gpu_pct")"
+        "$cpu_label" \
+        "$gpu_label"
 
     tooltip+=$'\n'"<span alpha='55%'>click for menu · right-click toggles boost</span>"
 
@@ -334,12 +370,14 @@ msi_ec_fan_json() {
     class="$fan_mode"
     [[ "$cooler" == "on" ]] && class="boost"
 
+    msi_ec_json_escape tooltip_json "$tooltip"
+    msi_ec_json_escape class_json "$class"
     printf '{"text":"%s %s","tooltip":"%s","class":"%s"}\n' \
-        "$icon" "$display_rpm" "$(msi_ec_json_escape "$tooltip")" "$(msi_ec_json_escape "$class")"
+        "$icon" "$display_rpm" "$tooltip_json" "$class_json"
 }
 
 msi_ec_profile_json() {
-    local pp_profile pp_icon msi_profile tooltip class
+    local pp_profile pp_icon msi_profile tooltip class tooltip_json class_json
 
     pp_profile="$(powerprofiles_current || true)"
     pp_icon="$(powerprofiles_icon "$pp_profile")"
@@ -355,8 +393,10 @@ msi_ec_profile_json() {
         "$msi_profile"
     class="$pp_profile"
 
+    msi_ec_json_escape tooltip_json "$tooltip"
+    msi_ec_json_escape class_json "$class"
     printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \
-        "$pp_icon" "$(msi_ec_json_escape "$tooltip")" "$(msi_ec_json_escape "$class")"
+        "$pp_icon" "$tooltip_json" "$class_json"
 }
 
 msi_ec_toggle_boost() {
@@ -366,8 +406,9 @@ msi_ec_toggle_boost() {
     [[ "$current" == "on" ]] && next="off" || next="on"
 
     msi_ec_write cooler_boost "$next" || return 1
-    notify-send "MSI EC" "Cooler Boost: $next" -i "dialog-ok" 2>/dev/null || true
-    pkill -RTMIN+4 waybar 2>/dev/null || true
+    notify-send -e "MSI EC" "Cooler Boost: $next" -i "dialog-ok" 2>/dev/null || true
+    # The fan module redraws every two seconds anyway; this saves the wait.
+    "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/fan.sh" wake 2>/dev/null || true
 }
 
 msi_ec_main() {
@@ -400,7 +441,7 @@ msi_ec_main() {
             ;;
         set-profile)
             attr="$(msi_ec_profile_attr)"
-            msi_ec_write "$attr" "${2:?missing profile}"
+            msi_ec_write "$attr" "${2:?missing profile}" && msi_ec_refresh_profile_module
             ;;
         powerprofiles)
             powerprofiles_list
