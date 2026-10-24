@@ -9,3 +9,5 @@
 	email = remenod@gmail.com
 [color]
 	ui = auto
+[core]
+	excludesfile = /home/remenod/.gitignore_global
