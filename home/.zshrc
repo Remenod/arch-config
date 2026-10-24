@@ -146,3 +146,17 @@ bindkey '^[[F' end-of-line
 bindkey '^[[3~' delete-char
 
 PROMPT='%F{green}%n@%m%f:%F{blue}%~%f$ '
+eval "$(direnv hook zsh)"
+
+# fzf: Ctrl-R fuzzy history, Ctrl-T file picker, Alt-C cd into a dir.
+# Sourced last so fzf's Ctrl-R wins over the history-search bindings above.
+if [[ -d /usr/share/fzf ]]; then
+    source /usr/share/fzf/key-bindings.zsh
+    source /usr/share/fzf/completion.zsh
+fi
+
+# zoxide: `z <part>` jumps to a frequently used dir, `zi` picks interactively.
+# Does not shadow cd.
+if (( $+commands[zoxide] )); then
+    eval "$(zoxide init zsh)"
+fi
